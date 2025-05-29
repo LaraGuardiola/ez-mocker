@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>EZ mocker</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <input class="tab-input" type="radio" id="tab1" name="tabs" checked>
+    <input class="tab-input" type="radio" id="tab2" name="tabs">
+    <header class="header">
+        
+        <label for="tab1" class="tab-label" id="tab-label-1">+</label>
+        <label for="tab2" class="tab-label" id="tab-label-2">
+            <img src="images/rules.svg" alt="" srcset="">
+        </label>
+
+    
+    </header>
+    <div class="container">
+        <div class="container-wrapper">
+
+            <section class="slide rule-creation">
+                <h2>Create rule</h2>
+    
+                <div class="form-group two-column">
+                    <div class="form-input">
+                        <label for="url-match-type">FILTER</label>
+                        <select id="url-match-type">
+                            <option value="contains">INCLUDES</option>
+                            <option value="exact">SAME AS</option>
+                            <option value="startsWith">STARTS WITH</option>
+                            <option value="endsWith">ENDS WITH</option>
+                            <option value="regex">REGEX</option>
+                        </select>
+                    </div>
+                    <div class="form-input">
+                        <label for="url-pattern">URL</label>
+                        <input type="text" id="url-pattern" placeholder="Ej: /api/data">
+                    </div>
+                </div>
+    
+                <div class="form-group three-column">
+                    <div class="form-input">
+                        <label for="url-method">METHOD</label>
+                        <select id="url-method">
+                            <option value="get">GET</option>
+                            <option value="post">POST</option>
+                            <option value="put">PUT</option>
+                            <option value="delete">DELETE</option>
+                            <option value="patch">PATCH</option>
+                            <option value="options">OPTIONS</option>
+                            <option value="head">HEAD</option>
+                            <option value="trace">TRACE</option>
+                            <option value="connect">CONNECT</option>
+                        </select>
+                    </div>
+    
+                    <div class="form-input">
+                        <label for="http-status-code">HTTP Code</label>
+                        <input type="number" id="http-status-code" value="200" min="100" max="599" maxlength="3">
+                    </div>
+    
+                    <div class="form-input">
+                        <label for="alias">Alias</label>
+                        <input type="text" id="alias" placeholder="/api/test">
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label for="mock-response">RESPONSE</label>
+                    <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }'></textarea>
+                    <small id="json-error" class="error-message" style="display:none;">Invalid JSON syntax</small>
+                </div>
+    
+                <input type="hidden" id="edit-mock-id"> <button id="save-mock">Save rule</button>
+            </section>
+    
+            <section class="slide rule-list">
+                 <h2>Rule list</h2>
+                <ul id="mocks-list">
+                </ul>
+            </section>
+
+        </div>
+        
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const urlPatternInput = document.getElementById('url-pattern');
+    const urlMatchTypeSelect = document.getElementById('url-match-type');
+    const mockResponseTextarea = document.getElementById('mock-response');
+    const jsonError = document.getElementById('json-error');
+    const saveMockButton = document.getElementById('save-mock');
+    const mocksListUl = document.getElementById('mocks-list');
+    const httpStatusCodeInput = document.getElementById('http-status-code');
+    const editMockIdInput = document.getElementById('edit-mock-id');
+    const tabLabelNewRule = document.querySelector('#tab-label-1');
+    const aliasInput = document.querySelector('#alias');
+
+    let mocks = [];
+
+    const clearForm = () => {
+        urlPatternInput.value = '';
+        mockResponseTextarea.value = '';
+        aliasInput.value = '';
+        httpStatusCodeInput.value = '200';
+        urlMatchTypeSelect.value = 'contains';
+        editMockIdInput.value = '';
+        jsonError.style.display = 'none';
+        urlPatternInput.focus();
+    }
+
+    const saveMocksToStorage = () => {
+        return new Promise(resolve => {
+            chrome.storage.local.set({ mocks: mocks }, () => {
+                console.log('Rule saved.');
+                resolve();
+            });
+        });
+    }
+
+    const loadMocks = () => {
+        chrome.storage.local.get('mocks', (data) => {
+            if (data.mocks) {
+                mocks = data.mocks;
+                renderMocksList();
+            }
+        });
+    }
+
+    const renderMocksList = () => {
+        mocksListUl.innerHTML = ''; 
+        mocks.forEach(mock => {
+            const listItem = document.createElement('li');
+            listItem.dataset.id = mock.id;
+
+            const infoDiv = document.createElement('div');
+            infoDiv.classList.add('mock-info');
+            infoDiv.innerHTML = `
+          <strong>${ !mock.alias ? mock.urlPattern: mock.alias }</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
+          <pre style="font-size:0.8em; max-height: 50px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 100)}...</pre>
+        `;
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('actions');
+
+            const toggleButton = document.createElement('button');
+            toggleButton.textContent = mock.isActive ? 'Desactivar' : 'Activar';
+            toggleButton.style.backgroundColor = mock.isActive ? '#28a745' : '#ffc107';
+            toggleButton.style.color = mock.isActive ? 'white' : 'black';
+            toggleButton.addEventListener('click', () => toggleMockActiveState(mock.id));
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Editar';
+            editButton.classList.add('edit-btn');
+            editButton.addEventListener('click', () => populateFormForEdit(mock.id));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Borrar';
+            deleteButton.classList.add('delete-btn');
+            deleteButton.addEventListener('click', () => deleteMock(mock.id));
+
+            actionsDiv.appendChild(toggleButton);
+            actionsDiv.appendChild(editButton);
+            actionsDiv.appendChild(deleteButton);
+
+            listItem.appendChild(infoDiv);
+            listItem.appendChild(actionsDiv);
+            mocksListUl.appendChild(listItem);
+        });
+    }
+
+    const parseJson = () => {
+        try {
+            const currentJson = mockResponseTextarea.value;
+            if (currentJson) {
+                const parsedJson = JSON.parse(currentJson);
+                mockResponseTextarea.value = JSON.stringify(parsedJson, null, 2); 
+                jsonError.style.display = 'none';
+            }
+        } catch (error) {
+            jsonError.textContent = 'Invalid JSON syntax';
+            jsonError.style.display = 'block';
+            jsonError.style.textAlign = 'right';
+        }
+    }
+
+    const populateFormForEdit = (id) => {
+        const mockToEdit = mocks.find(m => m.id === id);
+        if (mockToEdit) {
+            document.querySelector('#tab1').checked = true;
+            urlPatternInput.value = mockToEdit.urlPattern;
+            urlMatchTypeSelect.value = mockToEdit.matchType;
+            mockResponseTextarea.value = mockToEdit.rawResponse;
+            httpStatusCodeInput.value = mockToEdit.statusCode;
+            aliasInput.value = mockToEdit.alias || null;
+            editMockIdInput.value = mockToEdit.id; //Save the ID in order to know we are editing an existing mock
+            urlPatternInput.focus();
+        }
+    }
+
+    const toggleMockActiveState = async (id) => {
+        const mockIndex = mocks.findIndex(m => m.id === id);
+        if (mockIndex > -1) {
+            mocks[mockIndex].isActive = !mocks[mockIndex].isActive;
+            await saveMocksToStorage();
+            renderMocksList();
+            notifyBackgroundScript();
+        }
+    }
+
+    const deleteMock = async (id) => {
+        mocks = mocks.filter(mock => mock.id !== id);
+        await saveMocksToStorage();
+        renderMocksList();
+        notifyBackgroundScript();
+    }
+
+    const notifyBackgroundScript = () => {
+        chrome.runtime.sendMessage({ type: "UPDATE_RULES", mocks: mocks }, response => {
+            if (chrome.runtime.lastError) {
+                console.error("Error sending new rule / mock to the background:", chrome.runtime.lastError.message);
+            } else {
+                console.log("Background notified:", response);
+            }
+        });
+    }
+    
+    const saveOrEditMock = async () => {
+        const urlPattern = urlPatternInput.value.trim();
+        const matchType = urlMatchTypeSelect.value;
+        const responseStr = mockResponseTextarea.value.trim();
+        const statusCode = parseInt(httpStatusCodeInput.value) || 200;
+        const alias = aliasInput.value.trim();
+        const editingId = editMockIdInput.value ? parseInt(editMockIdInput.value) : null;
+
+        if (!urlPattern || !responseStr) {
+            alert('URL pattern and response are required.');
+            return;
+        }
+
+        let mockResponseJSON;
+        try {
+            mockResponseJSON = JSON.parse(responseStr);
+            jsonError.style.display = 'none';
+        } catch (error) {
+            jsonError.textContent = 'Invalid JSON syntax';
+            jsonError.style.display = 'block';
+            return;
+        }
+
+        if(!editingId) {
+            const newMock = {
+                id: Date.now(),
+                urlPattern,
+                matchType,
+                response: mockResponseJSON,
+                rawResponse: responseStr,
+                statusCode,
+                alias: alias ?? null,
+                isActive: true, 
+            };
+            mocks.push(newMock);
+        }
+
+        const mockIndex = mocks.findIndex(m => m.id === editingId);
+        if (mockIndex > -1) {
+            mocks[mockIndex] = {
+                ...mocks[mockIndex],
+                urlPattern,
+                matchType,
+                response: mockResponseJSON,
+                rawResponse: responseStr, 
+                statusCode,
+                alias: alias ?? null
+            };
+        }
+
+        await saveMocksToStorage();
+        renderMocksList();
+        notifyBackgroundScript();
+        clearForm();
+    }
+
+    loadMocks();
+
+    tabLabelNewRule.addEventListener('click', clearForm);
+    mockResponseTextarea.addEventListener('blur', parseJson);
+    saveMockButton.addEventListener('click', saveOrEditMock);
+});

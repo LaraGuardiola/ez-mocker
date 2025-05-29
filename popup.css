@@ -1,0 +1,217 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Courier New', monospace;
+}
+
+body {
+    font-family: sans-serif;
+    width: 800px;
+    max-width: 800px;
+    background-color: #f5f5f5;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #d5d5d5;
+    padding: 0.5em;
+    box-shadow: 0 4px 4px rgba(255, 255, 255, 0.1);
+}
+
+#tab-label-2 {
+    margin-left: 0.2em;
+}
+.tab-input {
+    display: none;  
+}
+
+.container-wrapper {
+    display: flex;
+    width: 200%; /* 2 secciones */
+    transition: transform 0.4s ease;
+}
+
+.slide {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    padding: 1em;
+}
+
+#tab1:checked ~ .container .container-wrapper {
+    transform: translateX(0%);
+}
+#tab2:checked ~ .container .container-wrapper {
+    transform: translateX(-50%);
+}
+
+.new-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ff5c35;
+    width: 30px;
+    height: 30px;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.tab-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ff5c35;
+    width: 30px;
+    height: 30px;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.tab-label:hover {
+    background-color: #2ee800;
+}
+
+.container {
+    display: flex;
+    width: 200%;
+    transition: transform 0.4s ease;
+}
+
+.container h2 {
+    margin-bottom: 0.5em;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5em;
+}
+
+.two-column, .three-column {
+    flex-direction: row;
+}
+
+.two-column .form-input:last-child {
+    flex-grow: 1;
+    margin-left: 0.5em;
+}
+
+.three-column .form-input:nth-child(2) {    
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+.form-input > select, input {
+    height: 33px;
+}
+
+img {
+    width: 80%;
+    height: 80%;
+    filter: hue-rotate(180deg);
+}
+
+label {
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+textarea {
+    min-height: 100px;
+    resize: none;
+    margin-bottom: 0.5em;
+    height: 322px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #ff5c35;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 15%;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: #2ee800;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+}
+
+#mocks-list {
+    list-style: none;
+    padding: 0;
+}
+
+#mocks-list li {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#mocks-list li .actions button {
+    font-size: 0.8em;
+    padding: 5px;
+    margin-left: 5px;
+}
+
+#mocks-list li .actions .delete-btn {
+    background-color: #dc3545;
+}
+
+#mocks-list li .actions .delete-btn:hover {
+    background-color: #c82333;
+}
+
+#mocks-list li .actions .edit-btn {
+    background-color: #ffc107;
+    color: black;
+}
+
+#mocks-list li .actions .edit-btn:hover {
+    background-color: #e0a800;
+}
+
+#mocks-list li .mock-info {
+    flex-grow: 1;
+    word-break: break-all;
+}
+
+#mocks-list li .mock-info small {
+    display: block;
+    color: #555;
+}
