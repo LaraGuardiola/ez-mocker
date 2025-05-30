@@ -121,7 +121,6 @@ body {
 img {
     width: 80%;
     height: 80%;
-    filter: hue-rotate(180deg);
 }
 
 label {
@@ -144,6 +143,14 @@ textarea {
     resize: none;
     margin-bottom: 0.5em;
     height: 322px;
+}
+
+.rule-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 510px;
+    overflow-y: auto;
 }
 
 button {
