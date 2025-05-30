@@ -32,10 +32,19 @@
         "<all_urls>"
       ],
       "js": [
+        "content-script-isolated.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
         "content-script.js"
       ],
-      "run_at": "document_idle",
-      "world": "MAIN"
+      "world": "MAIN",
+      "run_at": "document_idle"
     }
   ]
 }
