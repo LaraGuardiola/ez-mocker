@@ -1,29 +1,41 @@
 {
-    "manifest_version": 3,
-    "name": "EZ Mocker",
-    "version": "0.1",
-    "description": "Extensión para mockear respuestas de API.",
-    "permissions": [
-        "debugger",
-        "storage",
-        "activeTab", 
-        "scripting", 
-        "declarativeNetRequest" 
-    ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "images/ez-mocker.png",
-        "48": "images/ez-mocker.png",
-        "128": "images/ez-mocker.png"
-      }
-    },
-    "icons": {
+  "manifest_version": 3,
+  "name": "EZ Mocker",
+  "version": "0.1",
+  "description": "Easily mock API responses in your browser.",
+  "permissions": [
+    "debugger",
+    "storage",
+    "activeTab",
+    "scripting",
+    "declarativeNetRequest"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
       "16": "images/ez-mocker.png",
       "48": "images/ez-mocker.png",
       "128": "images/ez-mocker.png"
-    },
-    "background": {
-      "service_worker": "background.js"
     }
-  }
+  },
+  "icons": {
+    "16": "images/ez-mocker.png",
+    "48": "images/ez-mocker.png",
+    "128": "images/ez-mocker.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ]
+}

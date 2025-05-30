@@ -215,3 +215,7 @@ button:hover {
     display: block;
     color: #555;
 }
+
+.actions > button {
+    width: 50px;
+}

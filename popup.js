@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const urlPatternInput = document.getElementById('url-pattern');
     const urlMatchTypeSelect = document.getElementById('url-match-type');
+    const httpMethod = document.querySelector('#url-method');
     const mockResponseTextarea = document.getElementById('mock-response');
     const jsonError = document.getElementById('json-error');
     const saveMockButton = document.getElementById('save-mock');
@@ -9,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
     const aliasInput = document.querySelector('#alias');
+    const httpColorList = {
+        get: "#4CAF50",
+        post: "#2196F3",
+        put: "#FF9800",
+        patch: "#9C27B0",
+        delete: '#F44336',
+        options: '#9E9E9E',
+        head: '#607D8B',
+        any: '#343a40'
+    }
 
     let mocks = [];
 
@@ -45,31 +56,33 @@ document.addEventListener('DOMContentLoaded', () => {
         mocksListUl.innerHTML = ''; 
         mocks.forEach(mock => {
             const listItem = document.createElement('li');
+            let color = httpColorList[mock.method.toLowerCase()] || httpColorList.any
             listItem.dataset.id = mock.id;
+            listItem.style.borderLeft = `3px solid ${color}`;
 
             const infoDiv = document.createElement('div');
             infoDiv.classList.add('mock-info');
             infoDiv.innerHTML = `
-          <strong>${ !mock.alias ? mock.urlPattern: mock.alias }</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
-          <pre style="font-size:0.8em; max-height: 50px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 100)}...</pre>
+          <strong>${ mock.method } ${ !mock.alias ? mock.urlPattern: mock.alias }</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
+          <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ?"...":""}</pre>
         `;
 
             const actionsDiv = document.createElement('div');
             actionsDiv.classList.add('actions');
 
             const toggleButton = document.createElement('button');
-            toggleButton.textContent = mock.isActive ? 'Desactivar' : 'Activar';
+            toggleButton.textContent = mock.isActive ? 'Off' : 'On';
             toggleButton.style.backgroundColor = mock.isActive ? '#28a745' : '#ffc107';
             toggleButton.style.color = mock.isActive ? 'white' : 'black';
             toggleButton.addEventListener('click', () => toggleMockActiveState(mock.id));
 
             const editButton = document.createElement('button');
-            editButton.textContent = 'Editar';
+            editButton.textContent = 'Edit';
             editButton.classList.add('edit-btn');
             editButton.addEventListener('click', () => populateFormForEdit(mock.id));
 
             const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Borrar';
+            deleteButton.textContent = 'Delete';
             deleteButton.classList.add('delete-btn');
             deleteButton.addEventListener('click', () => deleteMock(mock.id));
 
@@ -142,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveOrEditMock = async () => {
         const urlPattern = urlPatternInput.value.trim();
         const matchType = urlMatchTypeSelect.value;
+        const method = httpMethod.value.toUpperCase();
         const responseStr = mockResponseTextarea.value.trim();
         const statusCode = parseInt(httpStatusCodeInput.value) || 200;
         const alias = aliasInput.value.trim();
@@ -167,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: Date.now(),
                 urlPattern,
                 matchType,
+                method,
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
@@ -182,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...mocks[mockIndex],
                 urlPattern,
                 matchType,
+                method,
                 response: mockResponseJSON,
                 rawResponse: responseStr, 
                 statusCode,
