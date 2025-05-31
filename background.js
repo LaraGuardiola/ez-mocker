@@ -20,6 +20,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
   }
+
+  if (request.type === "GET_JSON") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length > 0) {
+        const activeTab = tabs[0];
+        chrome.tabs.sendMessage(activeTab.id, {
+          type: "GET_JSON",
+        }).then(response => {
+          sendResponse({ status: "Popup asked for a json"});
+        }).catch(error => {
+          sendResponse({ status: "Error asking for json", error: error.message });
+        });
+      } else {
+        sendResponse({ status: "No active tab found" });
+      }
+    })
+  }
   
   return true;
 });

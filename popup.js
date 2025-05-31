@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const httpMethod = document.querySelector('#url-method');
     const mockResponseTextarea = document.getElementById('mock-response');
     const jsonError = document.getElementById('json-error');
+    const randomJson = document.getElementById('random-json');
     const saveMockButton = document.getElementById('save-mock');
     const mocksListUl = document.getElementById('mocks-list');
     const httpStatusCodeInput = document.getElementById('http-status-code');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let mocks = [];
+    let json = null;
 
     const clearForm = () => {
         urlPatternInput.value = '';
@@ -48,6 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.mocks) {
                 mocks = data.mocks;
                 renderMocksList();
+            }
+        });
+    }
+
+    const loadJson = () => {
+        chrome.storage.local.get('json', (data) => {
+            if (data.json) {
+                json = data.json;
+                console.log(json)
             }
         });
     }
@@ -131,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mocks[mockIndex].isActive = !mocks[mockIndex].isActive;
             await saveMocksToStorage();
             renderMocksList();
-            notifyBackgroundScript();
+            notifyBackgroundScriptForRules();
         }
     }
 
@@ -139,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
         mocks = mocks.filter(mock => mock.id !== id);
         await saveMocksToStorage();
         renderMocksList();
-        notifyBackgroundScript();
+        notifyBackgroundScriptForRules();
     }
 
-    const notifyBackgroundScript = () => {
+    const notifyBackgroundScriptForRules = () => {
         chrome.runtime.sendMessage({ type: "UPDATE_RULES", mocks: mocks }, response => {
             if (chrome.runtime.lastError) {
                 console.error("Error sending new rule / mock to the background:", chrome.runtime.lastError.message);
@@ -150,6 +161,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Background notified:", response);
             }
         });
+    }
+
+    const notifyBackgroundScriptForJson = () => {
+        chrome.runtime.sendMessage({ type: "GET_JSON", json: [] }, response => {
+            if (chrome.runtime.lastError) {
+                console.error("Error asking for json to the background:", chrome.runtime.lastError.message);
+            } else {
+                console.log("Background notified:", response);;
+                loadJson();
+                populateTextAreaWithJson();
+            }
+        });
+    }
+
+    const populateTextAreaWithJson = () => {
+        setTimeout(() => {
+            mockResponseTextarea.value = json ? json : '';
+        }, 50) // Wait a bit to ensure the background script has time to respond
     }
     
     const saveOrEditMock = async () => {
@@ -207,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await saveMocksToStorage();
         renderMocksList();
-        notifyBackgroundScript();
+        notifyBackgroundScriptForRules();
         clearForm();
     }
 
@@ -215,5 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabLabelNewRule.addEventListener('click', clearForm);
     mockResponseTextarea.addEventListener('blur', parseJson);
+    randomJson.addEventListener('click', notifyBackgroundScriptForJson);
     saveMockButton.addEventListener('click', saveOrEditMock);
 });

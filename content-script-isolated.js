@@ -35,7 +35,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         sendMocksToMainWorld();
         sendResponse({ status: "Mocks updated in isolated world", count: activeMocks.length });
+    } else {
+        console.log("ISOLATED: Ignoring message with type:", request.type);
     }
+
     return true;
 });
 

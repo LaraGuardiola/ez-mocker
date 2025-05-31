@@ -37,6 +37,15 @@
         "<all_urls>"
       ],
       "js": [
+        "content-script-generator.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
         "content-script.js"
       ],
       "world": "MAIN",

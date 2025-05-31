@@ -122,6 +122,19 @@ body {
     height: 33px;
 }
 
+.bottom-action {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.bottom-action > button {
+    width: 120px;
+}
+
+#save-mock {
+    margin-left: 0.5em;
+}
+
 img {
     width: 80%;
     height: 80%;
