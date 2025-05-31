@@ -4,11 +4,7 @@
   "version": "0.1",
   "description": "Easily mock API responses in your browser.",
   "permissions": [
-    "debugger",
-    "storage",
-    "activeTab",
-    "scripting",
-    "declarativeNetRequest"
+    "storage"
   ],
   "action": {
     "default_popup": "popup.html",

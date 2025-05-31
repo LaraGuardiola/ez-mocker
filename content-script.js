@@ -76,6 +76,7 @@
             'X-Intercepted-By': 'EZ mocker'
         })
 
+        //TODO: statusText should be set based on mock.statusCode, starting at popup.js
         const mockResponse = new Response(
             JSON.stringify(mock.response),
             {
