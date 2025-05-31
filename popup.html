@@ -10,13 +10,13 @@
     <input class="tab-input" type="radio" id="tab1" name="tabs" checked>
     <input class="tab-input" type="radio" id="tab2" name="tabs">
     <header class="header">
+        <div class="header-labels">
+            <label for="tab1" class="tab-label" id="tab-label-1">+</label>
+            <label for="tab2" class="tab-label" id="tab-label-2">
+                <img src="images/rules.svg" alt="" srcset="">
+            </label>
+        </div>
         
-        <label for="tab1" class="tab-label" id="tab-label-1">+</label>
-        <label for="tab2" class="tab-label" id="tab-label-2">
-            <img src="images/rules.svg" alt="" srcset="">
-        </label>
-
-    
     </header>
     <div class="container">
         <div class="container-wrapper">
@@ -82,7 +82,21 @@
     
             <section class="slide rule-list">
                 <div class="rule-list-wrapper">
-                    <h2>Rule list</h2>
+                    
+                    <div class="rule-list-header">
+                        <div class="section-title">
+                            <h2>Rule list</h2>
+                        </div>
+                        <div class="section-search">
+                            <small style="color: #555;">FILTER BY</small>
+                            <select name="" id="">
+                                <option value="method">METHOD</option>
+                                <option value="alias">ALIAS</option>
+                            </select>
+                            <input type="text" class="search-input">
+                        </div>
+                    </div>
+                    
                     <ul id="mocks-list">
                     </ul>
                 </div>

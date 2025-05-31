@@ -19,6 +19,13 @@ body {
     background-color: #d5d5d5;
     padding: 0.5em;
     box-shadow: 0 4px 4px rgba(255, 255, 255, 0.1);
+    flex-direction: column;
+}
+
+.header-labels {
+    display: flex;
+    width: 100%;
+    background-color: #d5d5d5;
 }
 
 #tab-label-2 {
@@ -168,6 +175,30 @@ textarea {
     width: 100%;
     max-height: 510px;
     overflow-y: auto;
+}
+
+.rule-list-header {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    margin-bottom: 0.5em;
+}
+
+.section-search {
+    display: flex;
+    align-items: center;
+}
+
+.section-search > select {
+    width: 100px;
+    margin-left: 0.5em;
+    font-size: smaller;
+}
+
+.section-search > input {
+    height: 30px;
+    width: 100px;
+    margin-left: 0.5em;
 }
 
 button {
