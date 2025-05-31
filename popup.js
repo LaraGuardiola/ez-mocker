@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlPatternInput = document.getElementById('url-pattern');
     const urlMatchTypeSelect = document.getElementById('url-match-type');
     const httpMethod = document.querySelector('#url-method');
+    const statusCode = document.querySelector('#http-status-code');
     const mockResponseTextarea = document.getElementById('mock-response');
     const jsonError = document.getElementById('json-error');
     const randomJson = document.getElementById('random-json');
@@ -11,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
     const aliasInput = document.querySelector('#alias');
+ 
+    // Selectors for search functionality
+    const ruleListSearchSelect = document.querySelector('.section-search #search-select');
+    const ruleListSearchSelectMethod = document.querySelector('.section-search #search-select-method');
+    const ruleListSearchInput = document.querySelector('.section-search .search-input');
+    const ruleListSearchLabel = document.querySelector('.section-search .search-btn');
+
     const httpColorList = {
         get: "#4CAF50",
         post: "#2196F3",
@@ -64,9 +72,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const setFilteredMocks = () => {
+        let filteredMocks = [...mocks];
+        const filterBy = ruleListSearchSelect.value;
+        const searchTerm = ruleListSearchInput.value.toLowerCase().trim();
+        const searchMethod = ruleListSearchSelectMethod.value.toLowerCase().trim();
+
+        if( filterBy === 'all') {
+            filteredMocks = mocks;
+        }else if ( filterBy === 'method') {
+            filteredMocks = mocks.filter(mock => mock.method.toLowerCase() === searchMethod);
+        }else if ( filterBy === 'alias') {
+            filteredMocks = mocks.filter(mock => {
+                const alias = mock.alias;
+                const urlPattern = mock.urlPattern;
+                
+                return alias.includes(searchTerm) && searchTerm.length > 0 || urlPattern.includes(searchTerm) && searchTerm.length > 0;
+            });
+        }else if(  filterBy === 'httpCode') {
+            filteredMocks = mocks.filter(mock => mock.statusCode.toString() === searchTerm);
+        }
+        console.log(mocks)
+        return filteredMocks;
+    }
+
     const renderMocksList = () => {
         mocksListUl.innerHTML = ''; 
-        mocks.forEach(mock => {
+
+        const filteredMocks = setFilteredMocks();
+
+        filteredMocks.forEach(mock => {
             const listItem = document.createElement('li');
             let color = httpColorList[mock.method.toLowerCase()] || httpColorList.any
             listItem.dataset.id = mock.id;
@@ -243,10 +278,50 @@ document.addEventListener('DOMContentLoaded', () => {
         clearForm();
     }
 
+    const showHideSearchInput = () => {
+        if(ruleListSearchSelect.value === 'all') {
+            ruleListSearchInput.style.display = 'none';
+            ruleListSearchSelectMethod.style.display = 'none';
+        } else if(ruleListSearchSelect.value === 'httpCode') {
+            ruleListSearchInput.type = 'number';
+            ruleListSearchInput.value = '200';
+            ruleListSearchInput.maxLength = 3;
+            ruleListSearchInput.min = 100;
+            ruleListSearchInput.max = 599;
+            ruleListSearchInput.addEventListener('input', (e) => {
+                if (e.target.value.length > 3) {
+                    e.target.value = e.target.value.slice(0, 3);
+                }
+            })
+            ruleListSearchInput.style.display = 'inline-block';
+            ruleListSearchSelectMethod.style.display = 'none';
+        }else if(ruleListSearchSelect.value === 'method') {
+            ruleListSearchInput.style.display = 'none';
+            ruleListSearchSelectMethod.style.display = 'inline-block';
+        }else if(ruleListSearchSelect.value === 'alias'){
+            ruleListSearchInput.type = 'text';
+            ruleListSearchInput.value = '';
+            ruleListSearchInput.style.display = 'inline-block';
+            ruleListSearchSelectMethod.style.display = 'none';
+        }
+        
+    }
+
     loadMocks();
 
     tabLabelNewRule.addEventListener('click', clearForm);
     mockResponseTextarea.addEventListener('blur', parseJson);
     randomJson.addEventListener('click', notifyBackgroundScriptForJson);
     saveMockButton.addEventListener('click', saveOrEditMock);
+    ruleListSearchSelect.addEventListener('click', showHideSearchInput);
+    ruleListSearchSelect.addEventListener('click', renderMocksList);
+    ruleListSearchSelect.addEventListener('change', renderMocksList);
+    ruleListSearchSelectMethod.addEventListener('change', renderMocksList);
+    ruleListSearchInput.addEventListener('input', renderMocksList);
+    ruleListSearchLabel.addEventListener('click', renderMocksList);
+    statusCode.addEventListener('input', (e) => {
+        if (e.target.value.length > 3) {
+            e.target.value = e.target.value.slice(0, 3);
+        }
+    })
 });

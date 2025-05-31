@@ -203,12 +203,14 @@ textarea {
     height: 30px;
     width: 100px;
     margin-left: 0.5em;
+    display: none;
 }
 
 .section-search > label {
     margin-left: 0.5em;
 }
 
+.search-btn { display: none; } /* Not needed anymore but just in case */
 .search-btn > img {
     height: 60%;
 }
