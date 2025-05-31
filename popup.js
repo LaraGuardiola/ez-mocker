@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setFilteredMocks = () => {
         let filteredMocks = [...mocks];
         const filterBy = ruleListSearchSelect.value;
-        const searchTerm = ruleListSearchInput.value.toLowerCase().trim();
+        const searchTerm = ruleListSearchInput.value.trim();
         const searchMethod = ruleListSearchSelectMethod.value.toLowerCase().trim();
 
         if( filterBy === 'all') {
