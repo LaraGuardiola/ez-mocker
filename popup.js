@@ -10,14 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const httpStatusCodeInput = document.getElementById('http-status-code');
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
-    const tabLabelRuleList = document.querySelector('#tab-label-2');
-    const tabLabelRuleListInput = document.querySelector('#tab2');
     const aliasInput = document.querySelector('#alias');
-
-    //RULE LIST
-    const ruleListHeader = document.querySelector('.rule-list-header');
-    const ruleListWrapper = document.querySelector('.rule-list-wrapper');
-
     const httpColorList = {
         get: "#4CAF50",
         post: "#2196F3",
