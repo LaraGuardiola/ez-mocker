@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearForm = () => {
         urlPatternInput.value = '';
         mockResponseTextarea.value = '';
+        httpMethod.value = 'get';
         aliasInput.value = '';
         httpStatusCodeInput.value = '200';
         urlMatchTypeSelect.value = 'contains';
@@ -82,9 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
             actionsDiv.classList.add('actions');
 
             const toggleButton = document.createElement('button');
-            toggleButton.textContent = mock.isActive ? 'Off' : 'On';
+            toggleButton.textContent = mock.isActive ? 'On' : 'Off';
             toggleButton.style.backgroundColor = mock.isActive ? '#28a745' : '#ffc107';
             toggleButton.style.color = mock.isActive ? 'white' : 'black';
+            toggleButton.classList.add('toggle-btn');
             toggleButton.addEventListener('click', () => toggleMockActiveState(mock.id));
 
             const editButton = document.createElement('button');
@@ -128,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('#tab1').checked = true;
             urlPatternInput.value = mockToEdit.urlPattern;
             urlMatchTypeSelect.value = mockToEdit.matchType;
+            httpMethod.value = mockToEdit.method.toLowerCase();
             mockResponseTextarea.value = mockToEdit.rawResponse;
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;

@@ -28,7 +28,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script-isolated.js"
+        "/content-script/content-script-isolated.js"
       ],
       "run_at": "document_idle"
     },
@@ -37,7 +37,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script-generator.js"
+        "/content-script/content-script-generator.js"
       ],
       "run_at": "document_idle"
     },
@@ -46,7 +46,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script.js"
+        "/content-script/content-script-main.js"
       ],
       "world": "MAIN",
       "run_at": "document_idle"

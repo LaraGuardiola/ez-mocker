@@ -231,6 +231,7 @@ button:hover {
 }
 
 #mocks-list li .mock-info {
+    max-width: 588px;
     flex-grow: 1;
     word-break: break-all;
 }
