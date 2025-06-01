@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let mocks = [];
+    let previousMockStates = [];
     let json = null;
     let areRulesActive = null;
 
@@ -460,10 +461,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tabLabels[2].onclick = async function () {
-        if( areRulesActive ) {
+        if (areRulesActive) {
+            previousMockStates = mocks.map(mock => mock.isActive);
             mocks.forEach(mock => mock.isActive = false);
         } else {
-            mocks.forEach(mock => mock.isActive = true);
+            if (previousMockStates.length > 0) {
+                mocks.forEach((mock, index) => {
+                    mock.isActive = previousMockStates[index];
+                });
+            } else {
+                mocks.forEach(mock => mock.isActive = true);
+            }
         }
         await saveMocksToStorage();
         loadMocks();
@@ -478,7 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         toggleOptionsVisibility();
     }
-    
 
     // create rule section
     mockResponseTextarea.addEventListener('blur', parseJson);
