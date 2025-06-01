@@ -315,10 +315,12 @@ button:hover {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
 }
 
 .option > label {
     text-align: center;
+    cursor: pointer;
 }
 
 .option:hover {
