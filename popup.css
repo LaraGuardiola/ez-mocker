@@ -179,7 +179,8 @@ textarea {
     min-height: 100px;
     resize: none;
     margin-bottom: 0.5em;
-    height: 322px;
+    height: 312px;
+    max-height: 312px;
 }
 
 .rule-list-wrapper {
