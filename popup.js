@@ -11,8 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const httpStatusCodeInput = document.getElementById('http-status-code');
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
+    const tabLabelOptions = document.querySelector('#tab-label-options');
+    const optionsContainer = document.querySelector('.options-container');
+    const tabLabels = [...document.querySelectorAll('.tab-label')];
+    const tabInputs = [...document.querySelectorAll('.tab-input')];
+    const options = [...document.querySelectorAll('.option')];
+    const optionIcons = [...document.querySelectorAll('.option-icon')];
     const aliasInput = document.querySelector('#alias');
- 
+
     // Selectors for search functionality
     const ruleListSearchSelect = document.querySelector('.section-search #search-select');
     const ruleListSearchSelectMethod = document.querySelector('.section-search #search-select-method');
@@ -78,18 +84,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const searchTerm = ruleListSearchInput.value.trim();
         const searchMethod = ruleListSearchSelectMethod.value.toLowerCase().trim();
 
-        if( filterBy === 'all') {
+        if (filterBy === 'all') {
             filteredMocks = mocks;
-        }else if ( filterBy === 'method') {
+        } else if (filterBy === 'method') {
             filteredMocks = mocks.filter(mock => mock.method.toLowerCase() === searchMethod);
-        }else if ( filterBy === 'alias') {
+        } else if (filterBy === 'alias') {
             filteredMocks = mocks.filter(mock => {
                 const alias = mock.alias;
                 const urlPattern = mock.urlPattern;
-                
+
                 return alias.includes(searchTerm) && searchTerm.length > 0 || urlPattern.includes(searchTerm) && searchTerm.length > 0;
             });
-        }else if(  filterBy === 'httpCode') {
+        } else if (filterBy === 'httpCode') {
             filteredMocks = mocks.filter(mock => mock.statusCode.toString() === searchTerm);
         }
         console.log(mocks)
@@ -97,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const renderMocksList = () => {
-        mocksListUl.innerHTML = ''; 
+        mocksListUl.innerHTML = '';
 
         const filteredMocks = setFilteredMocks();
 
@@ -110,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const infoDiv = document.createElement('div');
             infoDiv.classList.add('mock-info');
             infoDiv.innerHTML = `
-          <strong>${ mock.method } ${ !mock.alias ? mock.urlPattern: mock.alias }</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
-          <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ?"...":""}</pre>
+          <strong>${mock.method} ${!mock.alias ? mock.urlPattern : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
+          <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
         `;
 
             const actionsDiv = document.createElement('div');
@@ -149,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentJson = mockResponseTextarea.value;
             if (currentJson) {
                 const parsedJson = JSON.parse(currentJson);
-                mockResponseTextarea.value = JSON.stringify(parsedJson, null, 2); 
+                mockResponseTextarea.value = JSON.stringify(parsedJson, null, 2);
                 jsonError.style.display = 'none';
             }
         } catch (error) {
@@ -218,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mockResponseTextarea.value = json ? json : '';
         }, 50) // Wait a bit to ensure the background script has time to respond
     }
-    
+
     const saveOrEditMock = async () => {
         const urlPattern = urlPatternInput.value.trim();
         const matchType = urlMatchTypeSelect.value;
@@ -243,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if(!editingId) {
+        if (!editingId) {
             const newMock = {
                 id: Date.now(),
                 urlPattern,
@@ -253,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 rawResponse: responseStr,
                 statusCode,
                 alias: alias ?? null,
-                isActive: true, 
+                isActive: true,
             };
             mocks.push(newMock);
         }
@@ -266,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 matchType,
                 method,
                 response: mockResponseJSON,
-                rawResponse: responseStr, 
+                rawResponse: responseStr,
                 statusCode,
                 alias: alias ?? null
             };
@@ -279,10 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const showHideSearchInput = () => {
-        if(ruleListSearchSelect.value === 'all') {
+        if (ruleListSearchSelect.value === 'all') {
             ruleListSearchInput.style.display = 'none';
             ruleListSearchSelectMethod.style.display = 'none';
-        } else if(ruleListSearchSelect.value === 'httpCode') {
+        } else if (ruleListSearchSelect.value === 'httpCode') {
             ruleListSearchInput.type = 'number';
             ruleListSearchInput.value = '200';
             ruleListSearchInput.maxLength = 3;
@@ -295,21 +301,51 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             ruleListSearchInput.style.display = 'inline-block';
             ruleListSearchSelectMethod.style.display = 'none';
-        }else if(ruleListSearchSelect.value === 'method') {
+        } else if (ruleListSearchSelect.value === 'method') {
             ruleListSearchInput.style.display = 'none';
             ruleListSearchSelectMethod.style.display = 'inline-block';
-        }else if(ruleListSearchSelect.value === 'alias'){
+        } else if (ruleListSearchSelect.value === 'alias') {
             ruleListSearchInput.type = 'text';
             ruleListSearchInput.value = '';
             ruleListSearchInput.style.display = 'inline-block';
             ruleListSearchSelectMethod.style.display = 'none';
         }
-        
+    }
+
+    const toggleOptionsVisibility = () => {
+        optionsContainer.classList.toggle('hidden');
     }
 
     loadMocks();
 
+    // header
     tabLabelNewRule.addEventListener('click', clearForm);
+    for (let i = 0; i < tabLabels.length; i++) {
+        tabLabels[0].onclick = function () {
+            if ( optionsContainer.classList.contains('hidden')) {
+                toggleOptionsVisibility();
+            }
+            optionsContainer.style.left = "720px";
+            toggleOptionsVisibility();
+        }
+        tabLabels[1].onclick = function () {
+            if ( optionsContainer.classList.contains('hidden')) {
+                toggleOptionsVisibility();
+            }
+            optionsContainer.style.left = "1520px";
+            toggleOptionsVisibility();
+        }
+        tabLabels[2].onclick = function () {
+            if (tabInputs[0].checked) {
+                optionsContainer.style.left = "720px";
+            } else {
+                optionsContainer.style.left = "1520px";
+            }
+            toggleOptionsVisibility();
+        }
+    }
+
+    // create rule section
     mockResponseTextarea.addEventListener('blur', parseJson);
     randomJson.addEventListener('click', notifyBackgroundScriptForJson);
     saveMockButton.addEventListener('click', saveOrEditMock);
@@ -319,9 +355,25 @@ document.addEventListener('DOMContentLoaded', () => {
     ruleListSearchSelectMethod.addEventListener('change', renderMocksList);
     ruleListSearchInput.addEventListener('input', renderMocksList);
     ruleListSearchLabel.addEventListener('click', renderMocksList);
+    
+    // Rule list section
     statusCode.addEventListener('input', (e) => {
         if (e.target.value.length > 3) {
             e.target.value = e.target.value.slice(0, 3);
         }
     })
+
+    // Options menu
+    options[0].onmouseenter = function () {
+        optionIcons[0].src = "images/import-white.svg";
+    }
+    options[0].onmouseleave = function () {
+        optionIcons[0].src = "images/import-black.svg";
+    }
+    options[1].onmouseenter = function () {
+        optionIcons[1].src = "images/export-white.svg";
+    }
+    options[1].onmouseleave = function () {
+        optionIcons[1].src = "images/export-black.svg";
+    }
 });

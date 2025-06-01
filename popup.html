@@ -11,10 +11,14 @@
     <input class="tab-input" type="radio" id="tab2" name="tabs">
     <header class="header">
         <div class="header-labels">
-            <label for="tab1" class="tab-label" id="tab-label-1">+</label>
-            <label for="tab2" class="tab-label" id="tab-label-2">
-                <img src="images/rules.svg" alt="" srcset="">
-            </label>
+            <div class="header-labels-wrapper">
+                <label for="tab1" class="tab-label" id="tab-label-1">+</label>
+                <label for="tab2" class="tab-label" id="tab-label-2">
+                    <img src="images/rules.svg" alt="" srcset="">
+                </label>
+            </div>
+            
+            <label for="" class="tab-label" id="tab-label-options"><img src="/images/options.svg" alt=""></label>
         </div>
         
     </header>
@@ -115,7 +119,16 @@
                     </ul>
                 </div>
             </section>
-
+            <div class="options-container hidden">
+                <div class="option">
+                    <label for=""><img class="option-icon" src="images/import-black.svg" alt=""></label>
+                    <label for="">Import</label>
+                </div>
+                <div class="option">
+                    <label for=""><img class="option-icon" src="images/export-black.svg" alt=""></label>
+                    <label for="">Export</label>
+                </div>
+            </div>
         </div>
         
     </div>
