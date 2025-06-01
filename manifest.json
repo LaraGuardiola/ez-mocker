@@ -4,14 +4,16 @@
   "version": "0.1",
   "description": "Easily mock API responses in your browser.",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab"
   ],
   "action": {
+    "default_title": "Activate EZ Mocker",
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "images/ez-mocker.png",
-      "48": "images/ez-mocker.png",
-      "128": "images/ez-mocker.png"
+      "16": "images/ez-mocker-black.png",
+      "48": "images/ez-mocker-black.png",
+      "128": "images/ez-mocker-black.png"
     }
   },
   "icons": {
@@ -22,32 +24,26 @@
   "background": {
     "service_worker": "background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "/content-script/content-script-isolated.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["/content-script/content-script-isolated.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "/content-script/content-script-generator.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["/content-script/content-script-generator.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "/content-script/content-script-main.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["/content-script/content-script-main.js"],
       "world": "MAIN",
       "run_at": "document_idle"
     }
