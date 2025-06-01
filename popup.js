@@ -334,12 +334,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (file && file.type === 'application/json') {
             const reader = new FileReader();
 
-            reader.onload = function (e) {
+            reader.onload = async function (e) {
                 try {
                     mocks = JSON.parse(e.target.result);
                     console.log('Imported collection:', mocks);
-                    renderMocksList();
+                    await saveMocksToStorage();
+                    loadMocks();
                     notifyBackgroundScriptForRules();
+                    clearForm();
                 } catch (error) {
                     console.error('Error parsing imported collection:', error);
                 }
