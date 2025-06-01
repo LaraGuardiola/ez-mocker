@@ -92,6 +92,14 @@ body {
     transition: background-color 0.2s ease;
 }
 
+#tab-label-3 {
+    margin-left: 0.2em;
+}
+
+#tab-label-3 > img {
+    height: 60%;
+}
+
 .tab-label:hover {
     background-color: #2ee800;
 }

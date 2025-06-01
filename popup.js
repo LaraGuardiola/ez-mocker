@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const httpStatusCodeInput = document.getElementById('http-status-code');
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
-    const tabLabelOptions = document.querySelector('#tab-label-options');
     const optionsContainer = document.querySelector('.options-container');
     const tabLabels = [...document.querySelectorAll('.tab-label')];
     const tabInputs = [...document.querySelectorAll('.tab-input')];
     const options = [...document.querySelectorAll('.option')];
     const optionIcons = [...document.querySelectorAll('.option-icon')];
     const aliasInput = document.querySelector('#alias');
+    const startStopImg = document.querySelector('#start-stop');
 
     // Selectors for search functionality
     const ruleListSearchSelect = document.querySelector('.section-search #search-select');
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let mocks = [];
     let json = null;
+    let areRulesActive = null;
 
     const clearForm = () => {
         urlPatternInput.value = '';
@@ -76,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.get('mocks', (data) => {
             if (data.mocks) {
                 mocks = data.mocks;
+                areRulesActive = mocks.some(mock => mock.isActive);
+                startStopImg.src = areRulesActive
+                    ? "images/stop.svg"
+                    : "images/active.svg";
                 renderMocksList();
             }
         });
@@ -200,6 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMocksList();
             notifyBackgroundScriptForRules();
         }
+        areRulesActive = mocks.some(mock => mock.isActive);
+        startStopImg.src = areRulesActive
+            ? "images/stop.svg"
+            : "images/active.svg";
     }
 
     const deleteMock = async (id) => {
@@ -433,30 +442,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // header
     tabLabelNewRule.addEventListener('click', clearForm);
-    for (let i = 0; i < tabLabels.length; i++) {
-        tabLabels[0].onclick = function () {
-            if (optionsContainer.classList.contains('hidden')) {
-                toggleOptionsVisibility();
-            }
-            optionsContainer.style.left = "720px";
+    
+    tabLabels[0].onclick = function () {
+        if (optionsContainer.classList.contains('hidden')) {
             toggleOptionsVisibility();
         }
-        tabLabels[1].onclick = function () {
-            if (optionsContainer.classList.contains('hidden')) {
-                toggleOptionsVisibility();
-            }
-            optionsContainer.style.left = "1520px";
-            toggleOptionsVisibility();
-        }
-        tabLabels[2].onclick = function () {
-            if (tabInputs[0].checked) {
-                optionsContainer.style.left = "720px";
-            } else {
-                optionsContainer.style.left = "1520px";
-            }
-            toggleOptionsVisibility();
-        }
+        optionsContainer.style.left = "720px";
+        toggleOptionsVisibility();
     }
+
+    tabLabels[1].onclick = function () {
+        if (optionsContainer.classList.contains('hidden')) {
+            toggleOptionsVisibility();
+        }
+        optionsContainer.style.left = "1520px";
+        toggleOptionsVisibility();
+    }
+
+    tabLabels[2].onclick = async function () {
+        if( areRulesActive ) {
+            mocks.forEach(mock => mock.isActive = false);
+        } else {
+            mocks.forEach(mock => mock.isActive = true);
+        }
+        await saveMocksToStorage();
+        loadMocks();
+        notifyBackgroundScriptForRules();
+    }
+
+    tabLabels[3].onclick = function () {
+        if (tabInputs[0].checked) {
+            optionsContainer.style.left = "720px";
+        } else {
+            optionsContainer.style.left = "1520px";
+        }
+        toggleOptionsVisibility();
+    }
+    
 
     // create rule section
     mockResponseTextarea.addEventListener('blur', parseJson);
