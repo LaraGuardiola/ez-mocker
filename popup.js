@@ -35,6 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
         head: '#607D8B',
         any: '#343a40'
     }
+    
+    const collectionRequiredFields = [
+        'alias',
+        'id',
+        'isActive',
+        'matchType',
+        'method',
+        'rawResponse',
+        'response',
+        'statusCode',
+        'urlPattern'
+    ];
 
     let mocks = [];
     let json = null;
@@ -336,6 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             reader.onload = async function (e) {
                 try {
+                    validatedMocks = validateJSON(JSON.parse(e.target.result));
+                    if (!validatedMocks) {
+                        return;
+                    }
                     mocks = JSON.parse(e.target.result);
                     console.log('Imported collection:', mocks);
                     await saveMocksToStorage();
@@ -344,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearForm();
                 } catch (error) {
                     console.error('Error parsing imported collection:', error);
+                    alert("Invalid collection format.");
                 }
             };
 
@@ -357,6 +374,59 @@ document.addEventListener('DOMContentLoaded', () => {
         input.accept = '.json';
         input.addEventListener('change', handleJson);
         input.click();
+    }
+
+    const validateJSON = (json) => {
+        if (!Array.isArray(json)) {
+            alert("Invalid collection format.");
+            return false;
+        }
+
+        for (let i = 0; i < json.length; i++) {
+            const mock = json[i];
+
+            for (const field of collectionRequiredFields) {
+                if (!(field in mock)) {
+                    return false;
+                }
+            }
+            
+            if (mock['urlPattern'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['rawResponse'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['method'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['statusCode'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['matchType'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['id'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['isActive'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            if (mock['response'] === '') {
+                alert("Invalid collection format.");
+                return false;
+            }
+            
+        }
+
+        return true;
     }
 
     loadMocks();
