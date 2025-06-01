@@ -316,20 +316,61 @@ document.addEventListener('DOMContentLoaded', () => {
         optionsContainer.classList.toggle('hidden');
     }
 
+    const exportCollection = () => {
+        const jsonString = JSON.stringify(mocks, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = "my-collection" + '.json';
+        link.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    const handleJson = (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'application/json') {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                try {
+                    mocks = JSON.parse(e.target.result);
+                    console.log('Imported collection:', mocks);
+                    renderMocksList();
+                    notifyBackgroundScriptForRules();
+                } catch (error) {
+                    console.error('Error parsing imported collection:', error);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    }
+
+    const importCollection = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.addEventListener('change', handleJson);
+        input.click();
+    }
+
     loadMocks();
 
     // header
     tabLabelNewRule.addEventListener('click', clearForm);
     for (let i = 0; i < tabLabels.length; i++) {
         tabLabels[0].onclick = function () {
-            if ( optionsContainer.classList.contains('hidden')) {
+            if (optionsContainer.classList.contains('hidden')) {
                 toggleOptionsVisibility();
             }
             optionsContainer.style.left = "720px";
             toggleOptionsVisibility();
         }
         tabLabels[1].onclick = function () {
-            if ( optionsContainer.classList.contains('hidden')) {
+            if (optionsContainer.classList.contains('hidden')) {
                 toggleOptionsVisibility();
             }
             optionsContainer.style.left = "1520px";
@@ -355,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ruleListSearchSelectMethod.addEventListener('change', renderMocksList);
     ruleListSearchInput.addEventListener('input', renderMocksList);
     ruleListSearchLabel.addEventListener('click', renderMocksList);
-    
+
     // Rule list section
     statusCode.addEventListener('input', (e) => {
         if (e.target.value.length > 3) {
@@ -376,4 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
     options[1].onmouseleave = function () {
         optionIcons[1].src = "images/export-black.svg";
     }
+    options[0].addEventListener('click', importCollection);
+    options[1].addEventListener('click', exportCollection);
 });
