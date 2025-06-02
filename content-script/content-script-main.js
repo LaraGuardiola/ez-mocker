@@ -160,7 +160,11 @@
         );
 
         console.log('🔴 Returning mock:', mock.response, mockResponse.status, mockResponse.statusText);
-        return Promise.resolve(mockResponse);
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(mockResponse);
+            }, mock.delay);
+        });
     };
 
     const originalXHR = window.XMLHttpRequest;
