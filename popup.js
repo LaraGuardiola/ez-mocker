@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlMatchTypeSelect = document.getElementById('url-match-type');
     const httpMethod = document.querySelector('#url-method');
     const statusCode = document.querySelector('#http-status-code');
+    const delay = document.querySelector('#delay');
     const mockResponseTextarea = document.getElementById('mock-response');
     const jsonError = document.getElementById('json-error');
     const randomJson = document.getElementById('random-json');
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'isActive',
         'matchType',
         'method',
+        'delay',
         'rawResponse',
         'response',
         'statusCode',
@@ -57,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         urlPatternInput.value = '';
         mockResponseTextarea.value = '';
         httpMethod.value = 'get';
+        delay.value = '0'
         aliasInput.value = '';
         httpStatusCodeInput.value = '200';
         urlMatchTypeSelect.value = 'contains';
@@ -134,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const infoDiv = document.createElement('div');
             infoDiv.classList.add('mock-info');
             infoDiv.innerHTML = `
-          <strong>${mock.method} ${!mock.alias ? mock.urlPattern : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
+          <strong>${mock.method} ${!mock.alias ? mock.urlPattern : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode} - Delay ${mock.delay}ms</small>
           <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
         `;
 
@@ -190,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlPatternInput.value = mockToEdit.urlPattern;
             urlMatchTypeSelect.value = mockToEdit.matchType;
             httpMethod.value = mockToEdit.method.toLowerCase();
+            delay.value = mockToEdit.delay;
             mockResponseTextarea.value = mockToEdit.rawResponse;
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;
@@ -251,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlPattern = urlPatternInput.value.trim();
         const matchType = urlMatchTypeSelect.value;
         const method = httpMethod.value.toUpperCase();
+        const delayValue = parseInt(delay.value) || 0;
         const responseStr = mockResponseTextarea.value.trim();
         const statusCode = parseInt(httpStatusCodeInput.value) || 200;
         const alias = aliasInput.value.trim();
@@ -277,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 urlPattern,
                 matchType,
                 method,
+                delay: delayValue,
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
@@ -293,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 urlPattern,
                 matchType,
                 method,
+                delay: delayValue,
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
