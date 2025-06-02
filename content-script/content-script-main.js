@@ -221,7 +221,6 @@
                             .join('\n');
                     };
 
-                    // headers?
                     console.log('🔵 Returning mock:', mock.response, mock.statusCode, httpStatusTexts[mock.statusCode], xhr.getAllResponseHeaders());
                 }
 

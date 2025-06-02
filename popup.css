@@ -133,9 +133,13 @@ body {
     margin-left: 0.5em;
 }
 
-.three-column .form-input:nth-child(2) {    
-    margin-right: 0.5em;
+.three-column .form-input:nth-child(2), .form-input:nth-child(3), .form-input:nth-child(4) {    
     margin-left: 0.5em;
+    width: 100px;
+}
+
+.form-input:nth-child(4) {
+    width: 200px;
 }
 
 .form-input > select, input {
