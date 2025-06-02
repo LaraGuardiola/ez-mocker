@@ -12,15 +12,15 @@
     <header class="header">
         <div class="header-labels">
             <div class="header-labels-wrapper">
-                <label for="tab1" class="tab-label" id="tab-label-1">+</label>
-                <label for="tab2" class="tab-label" id="tab-label-2">
+                <label title="New rule" for="tab1" class="tab-label" id="tab-label-1">+</label>
+                <label title="Rule list" for="tab2" class="tab-label" id="tab-label-2">
                     <img src="images/rules.svg" alt="" srcset="">
                 </label>
-                <label for="tab3" class="tab-label" id="tab-label-3">
+                <label title="Start / Stop" for="tab3" class="tab-label" id="tab-label-3">
                     <img src="images/active.svg" alt="" srcset="" id="start-stop">
                 </label>
             </div>
-            
+            <div class="header-popup"></div>
             <label for="" class="tab-label" id="tab-label-options"><img src="/images/options.svg" alt=""></label>
         </div>
         
@@ -68,9 +68,14 @@
                         <label for="http-status-code">HTTP Code</label>
                         <input type="number" id="http-status-code" value="200" min="100" max="599" maxlength="3">
                     </div>
+
+                    <div class="form-input">
+                        <label title="In ms. Only available for fetch requests" for="delay">Delay*</label>
+                        <input type="number" id="delay" value="0" min="0"  maxlength="9" step="1000">
+                    </div>
     
                     <div class="form-input">
-                        <label for="alias">Alias</label>
+                        <label title="Not required" for="alias">Alias*</label>
                         <input type="text" id="alias" placeholder="/api/test">
                     </div>
                 </div>
@@ -123,12 +128,12 @@
                 </div>
             </section>
             <div class="options-container hidden">
-                <div class="option">
-                    <label for=""><img class="option-icon" src="images/import-black.svg" alt=""></label>
+                <div title="Import collection in JSON format" class="option">
+                    <label title="Import collection in JSON format" for=""><img class="option-icon" src="images/import-black.svg" alt=""></label>
                     <label for="">Import</label>
                 </div>
-                <div class="option">
-                    <label for=""><img class="option-icon" src="images/export-black.svg" alt=""></label>
+                <div title="Export collection in JSON format" class="option">
+                    <label title="Export collection in JSON format" for=""><img class="option-icon" src="images/export-black.svg" alt=""></label>
                     <label for="">Export</label>
                 </div>
             </div>
