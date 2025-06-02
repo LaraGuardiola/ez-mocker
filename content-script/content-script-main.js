@@ -162,4 +162,91 @@
         console.log('🔴 Returning mock:', mock.response, mockResponse.status, mockResponse.statusText);
         return Promise.resolve(mockResponse);
     };
+
+    const originalXHR = window.XMLHttpRequest;
+
+    function EzXHR() {
+        const xhr = new originalXHR();
+
+        let url = '';
+        let method = '';
+        let mock = null;
+
+        const originalOpen = xhr.open;
+        xhr.open = function (reqMethod, reqUrl, async = true, user, password) {
+            method = reqMethod;
+            url = reqUrl;
+            return originalOpen.call(xhr, reqMethod, reqUrl, async, user, password);
+        };
+
+        const originalSend = xhr.send;
+        xhr.send = function (...args) {
+            console.log('🔵 INTERCEPTING XHR request:', method, url);
+
+            mock = findMatchingMock(url);
+
+            if (!mock) {
+                console.log('🔵 No matching mock found for:', url);
+                return originalSend.apply(xhr, args);
+            }
+
+            // Intercepting onReadyStateChange
+            const originalOnReadyStateChange = xhr.onreadystatechange;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    // response
+                    const mockResponse = JSON.stringify(mock.response);
+                    const status = mock.statusCode || 200;
+                    const statusText = httpStatusTexts[status] || 'Mocked';
+
+                    // headers
+                    const mockHeaders = Object.assign({
+                        'content-type': 'application/json',
+                        'x-intercepted-by': 'EZ mocker'
+                    }, mock?.headers);
+
+                    overrideReadonlyProperty(xhr, 'responseText', mockResponse);
+                    overrideReadonlyProperty(xhr, 'response', mockResponse);
+                    overrideReadonlyProperty(xhr, 'status', status);
+                    overrideReadonlyProperty(xhr, 'statusText', statusText);
+
+                    xhr.getResponseHeader = function (name) {
+                        if (!name) return null;
+                        return mockHeaders[name.toLowerCase()] || null;
+                    };
+
+                    xhr.getAllResponseHeaders = function () {
+                        return Object.entries(mockHeaders)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join('\n');
+                    };
+
+                    // headers?
+                    console.log('🔵 Returning mock:', mock.response, mock.statusCode, httpStatusTexts[mock.statusCode], xhr.getAllResponseHeaders());
+                }
+
+                if (originalOnReadyStateChange) {
+                    return originalOnReadyStateChange.apply(this, arguments);
+                }
+            };
+
+            return originalSend.apply(xhr, args);
+        };
+
+        return xhr;
+    }
+
+    // Override read-only prop in xhr
+    function overrideReadonlyProperty(obj, prop, value) {
+        try {
+            Object.defineProperty(obj, prop, {
+                get: typeof value === 'function' ? value : () => value,
+                configurable: true
+            });
+        } catch (e) {
+            console.warn(`⚠️ Failed to override ${prop}:`, e);
+        }
+    }
+
+    window.XMLHttpRequest = EzXHR;
 })();
