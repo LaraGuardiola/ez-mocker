@@ -78,7 +78,7 @@ async function changeIcons() {
 
   console.log("Icons loaded from local folder");
 
-  // Cambiar el icono usando ImageData
+  // Change icon using ImageData
   await new Promise((resolve, reject) => {
     chrome.action.setIcon({
       imageData: {

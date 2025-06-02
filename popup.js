@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlMatchTypeSelect = document.getElementById('url-match-type');
     const httpMethod = document.querySelector('#url-method');
     const statusCode = document.querySelector('#http-status-code');
+    const delay = document.querySelector('#delay');
     const mockResponseTextarea = document.getElementById('mock-response');
     const jsonError = document.getElementById('json-error');
     const randomJson = document.getElementById('random-json');
@@ -18,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const optionIcons = [...document.querySelectorAll('.option-icon')];
     const aliasInput = document.querySelector('#alias');
     const startStopImg = document.querySelector('#start-stop');
+    const headerPopup = document.querySelector('.header-popup');
+    const popupTimer = 5000;
+    let popupTimeoutId;
 
     // Selectors for search functionality
     const ruleListSearchSelect = document.querySelector('.section-search #search-select');
@@ -42,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'isActive',
         'matchType',
         'method',
+        'delay',
         'rawResponse',
         'response',
         'statusCode',
@@ -54,15 +59,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let areRulesActive = null;
 
     const clearForm = () => {
-        urlPatternInput.value = '';
-        mockResponseTextarea.value = '';
-        httpMethod.value = 'get';
-        aliasInput.value = '';
-        httpStatusCodeInput.value = '200';
-        urlMatchTypeSelect.value = 'contains';
-        editMockIdInput.value = '';
-        jsonError.style.display = 'none';
-        urlPatternInput.focus();
+        if(urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
+            urlPatternInput.value = '';
+            mockResponseTextarea.value = '';
+            httpMethod.value = 'get';
+            delay.value = '0'
+            aliasInput.value = '';
+            httpStatusCodeInput.value = '200';
+            urlMatchTypeSelect.value = 'contains';
+            editMockIdInput.value = '';
+            jsonError.style.display = 'none';
+            urlPatternInput.focus();
+        } else {
+            return;
+        }
     }
 
     const saveMocksToStorage = () => {
@@ -91,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.get('json', (data) => {
             if (data.json) {
                 json = data.json;
-                console.log(json)
+                console.log(json);
             }
         });
     }
@@ -134,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const infoDiv = document.createElement('div');
             infoDiv.classList.add('mock-info');
             infoDiv.innerHTML = `
-          <strong>${mock.method} ${!mock.alias ? mock.urlPattern : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode}</small>
+          <strong>${mock.method} ${!mock.alias ? mock.urlPattern.length > 70 ? mock.urlPattern.substring(0, 70) + "..." : mock.urlPattern : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode} - Delay ${mock.delay}ms</small>
           <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
         `;
 
@@ -190,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlPatternInput.value = mockToEdit.urlPattern;
             urlMatchTypeSelect.value = mockToEdit.matchType;
             httpMethod.value = mockToEdit.method.toLowerCase();
+            delay.value = mockToEdit.delay;
             mockResponseTextarea.value = mockToEdit.rawResponse;
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;
@@ -213,10 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const deleteMock = async (id) => {
+        deletedMock = mocks.find(mock => mock.id === id)
         mocks = mocks.filter(mock => mock.id !== id);
         await saveMocksToStorage();
         renderMocksList();
         notifyBackgroundScriptForRules();
+        renderPopup(`Rule ${deletedMock.method} ${ deletedMock.alias !== "" ? deletedMock.alias : deletedMock.urlPattern.length > 20 ? deletedMock.urlPattern.substring(0,20) + "..." : deletedMock.urlPattern} has been removed`)
     }
 
     const notifyBackgroundScriptForRules = () => {
@@ -248,16 +261,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const saveOrEditMock = async () => {
+        let isNewSave = null
         const urlPattern = urlPatternInput.value.trim();
         const matchType = urlMatchTypeSelect.value;
         const method = httpMethod.value.toUpperCase();
+        const delayValue = parseInt(delay.value) || 0;
         const responseStr = mockResponseTextarea.value.trim();
         const statusCode = parseInt(httpStatusCodeInput.value) || 200;
         const alias = aliasInput.value.trim();
         const editingId = editMockIdInput.value ? parseInt(editMockIdInput.value) : null;
 
         if (!urlPattern || !responseStr) {
-            alert('URL pattern and response are required.');
+            renderPopup('URL pattern and response are required');
             return;
         }
 
@@ -272,11 +287,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!editingId) {
+            isNewSave = true;
             const newMock = {
                 id: Date.now(),
                 urlPattern,
                 matchType,
                 method,
+                delay: delayValue,
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
@@ -288,11 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mockIndex = mocks.findIndex(m => m.id === editingId);
         if (mockIndex > -1) {
+            isNewSave = false;
             mocks[mockIndex] = {
                 ...mocks[mockIndex],
                 urlPattern,
                 matchType,
                 method,
+                delay: delayValue,
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
@@ -304,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMocksList();
         notifyBackgroundScriptForRules();
         clearForm();
+        isNewSave 
+            ? renderPopup("Rule saved") 
+            : renderPopup(`Rule ${mocks[mockIndex].method} ${ mocks[mockIndex].alias !== "" ? mocks[mockIndex].alias : mocks[mockIndex].urlPattern.length > 20 ? mocks[mockIndex].urlPattern.substring(0,20) + "..." : mocks[mockIndex].urlPattern} has been edited`)
     }
 
     const showHideSearchInput = () => {
@@ -349,6 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
 
         URL.revokeObjectURL(url);
+        toggleOptionsVisibility();
+        renderPopup('Exported JSON collection')
     }
 
     const handleJson = (event) => {
@@ -368,9 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadMocks();
                     notifyBackgroundScriptForRules();
                     clearForm();
+                    renderPopup('Imported JSON collection')
                 } catch (error) {
                     console.error('Error parsing imported collection:', error);
-                    alert("Invalid collection format.");
+                    renderPopup("Invalid collection format.");
                 }
             };
 
@@ -384,11 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
         input.accept = '.json';
         input.addEventListener('change', handleJson);
         input.click();
+        toggleOptionsVisibility();
     }
 
     const validateJSON = (json) => {
         if (!Array.isArray(json)) {
-            alert("Invalid collection format.");
+            renderPopup("Invalid collection format");
             return false;
         }
 
@@ -402,41 +428,72 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (mock['urlPattern'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['rawResponse'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['method'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['statusCode'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['matchType'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['id'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['isActive'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             if (mock['response'] === '') {
-                alert("Invalid collection format.");
+                renderPopup("Invalid collection format");
                 return false;
             }
             
         }
 
         return true;
+    }
+
+    const renderPopup = (text) => {
+        headerPopup.style.display = 'flex';
+
+        const span = document.createElement('span');
+        const img = document.createElement('img');
+
+        span.textContent = text;
+        img.onclick = function() {
+            span.remove();
+            img.remove();
+            headerPopup.style.display = 'none';
+            clearTimeout(popupTimeoutId);
+        }
+        img.src = 'images/close.svg'
+        
+        if (headerPopup.querySelector('span')) {
+            headerPopup.querySelector('span').textContent = span.textContent;
+        } else {
+            headerPopup.appendChild(span);
+            headerPopup.appendChild(img);
+        }
+
+        clearTimeout(popupTimeoutId);
+        
+        popupTimeoutId = setTimeout(() => {
+            span.remove();
+            img.remove();
+            headerPopup.style.display = 'none';
+        }, popupTimer)
     }
 
     loadMocks();
@@ -464,7 +521,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (areRulesActive) {
             previousMockStates = mocks.map(mock => mock.isActive);
             mocks.forEach(mock => mock.isActive = false);
+            renderPopup("HTTP interception stopped")
         } else {
+            renderPopup("HTTP interception activated")
             if (previousMockStates.length > 0) {
                 mocks.forEach((mock, index) => {
                     mock.isActive = previousMockStates[index];
@@ -486,6 +545,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         toggleOptionsVisibility();
     }
+    headerPopup.addEventListener('load', () => {
+        headerPopup.style.display = 'flex';
+    })
 
     // create rule section
     mockResponseTextarea.addEventListener('blur', parseJson);
