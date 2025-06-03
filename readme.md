@@ -64,3 +64,5 @@ Ez and sexy. 3 main buttons, 2 sections:
 ## 🧾 License
 
 MIT License. Free to use and modify. Limit interceptors to 5-12 request as i've seen across multiple extensions should be considered a crime so I built this out of spite. Take care y'all, until AGI replace us.
+
+[![Buy me a coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=webdev_slara&button_colour=FFDD00&font_colour=000000&font_family=Lato&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/webdev_slara)
