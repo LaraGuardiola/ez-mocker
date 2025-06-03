@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ruleListSearchSelect = document.querySelector('.section-search #search-select');
     const ruleListSearchSelectMethod = document.querySelector('.section-search #search-select-method');
     const ruleListSearchInput = document.querySelector('.section-search .search-input');
-    const ruleListSearchLabel = document.querySelector('.section-search .search-btn');
 
     const httpColorList = {
         get: "#4CAF50",
@@ -39,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         head: '#607D8B',
         any: '#343a40'
     }
+
+    const httpMethodNames = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"];
+    const matchTypeNames = ["contains", "exact", "startsWith", "endsWith", "regex"];
     
     const collectionRequiredFields = [
         'alias',
@@ -96,6 +98,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const mergeMocks = (existingMocks, importedMocks) => {
+        const merged = [...existingMocks];
+        let newCount = 0;
+        let updatedCount = 0;
+    
+        for (const imported of importedMocks) {
+            const index = merged.findIndex(m => m.id === imported.id);
+            if (index !== -1) {
+                merged[index] = imported;
+                updatedCount++;
+            } else {
+                merged.push(imported);
+                newCount++;
+            }
+        }
+    
+        return { merged, newCount, updatedCount };
+    };
 
     const loadJson = () => {
         chrome.storage.local.get('json', (data) => {
@@ -386,13 +407,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!validatedMocks) {
                         return;
                     }
-                    mocks = JSON.parse(e.target.result);
-                    console.log('Imported collection:', mocks);
+                    const importedMocks = JSON.parse(e.target.result)
+                    const { merged, newCount, updatedCount } = mergeMocks(mocks, importedMocks)
+                    mocks = merged;
+
                     await saveMocksToStorage();
                     loadMocks();
                     notifyBackgroundScriptForRules();
                     clearForm();
-                    renderPopup('Imported JSON collection')
+                    renderPopup(`Imported JSON collection. ${newCount} new rules. ${updatedCount} modified.`)
                 } catch (error) {
                     console.error('Error parsing imported collection:', error);
                     renderPopup("Invalid collection format.");
@@ -423,43 +446,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (const field of collectionRequiredFields) {
                 if (!(field in mock)) {
+                    renderPopup(`Field ${field} is missing`);
                     return false;
                 }
             }
             
             if (mock['urlPattern'] === '') {
+                renderPopup("Invalid collection format: urlPattern invalid");
+                return false;
+            }
+            if (mock['rawResponse'] === '' || JSON.parse(mock['rawResponse']) === undefined) {
+                renderPopup("Invalid collection format; rawResponse invalid");
+                return false;
+            }
+            if (!httpMethodNames.includes(mock['method'])) {
+                renderPopup("Invalid collection format: method invalid");
+                return false;
+            }
+            if (
+                typeof mock['statusCode'] !== 'number' ||
+                mock['statusCode'] <= 99 ||
+                mock['statusCode'] >= 600
+            ) {
+                renderPopup("Invalid collection format: statusCode invalid");
+                return false;
+            }
+            if (!matchTypeNames.includes(mock['matchType'])) {
                 renderPopup("Invalid collection format");
                 return false;
             }
-            if (mock['rawResponse'] === '') {
+            if (typeof mock['id'] !== 'number') {
+                renderPopup("Invalid collection format: id invalid");
+                return false;
+            }
+            if (typeof mock['isActive'] !== 'boolean') {
+                renderPopup("Invalid collection format: isActive invalid");
+                return false;
+            }
+            if (typeof mock['response'] === 'Object') {
                 renderPopup("Invalid collection format");
                 return false;
             }
-            if (mock['method'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            if (mock['statusCode'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            if (mock['matchType'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            if (mock['id'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            if (mock['isActive'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            if (mock['response'] === '') {
-                renderPopup("Invalid collection format");
-                return false;
-            }
-            
         }
 
         return true;
@@ -494,6 +521,34 @@ document.addEventListener('DOMContentLoaded', () => {
             img.remove();
             headerPopup.style.display = 'none';
         }, popupTimer)
+    }
+
+    function validateStatusCode(input) {
+        try {
+            let selectedStatusCodeSection = input === "New Rule" ? true : false
+            let domInput = selectedStatusCodeSection ? httpStatusCodeInput : ruleListSearchInput;
+            let value = parseInt(domInput.value);
+            
+            if (value < 100 || value > 599) {
+                if (value < 100) {
+                    domInput.value = 100
+                } else {
+                    domInput.value = 599
+                }
+            }
+            
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    limitToThreeDigits = (section) => {
+        let selectedStatusCodeSection = section === "New Rule" ? true : false
+        let domInput = selectedStatusCodeSection ? httpStatusCodeInput : ruleListSearchInput;
+
+        if( domInput.value.length > 3) {
+            domInput.value = domInput.value.slice(0,3);
+        }
     }
 
     loadMocks();
@@ -553,19 +608,17 @@ document.addEventListener('DOMContentLoaded', () => {
     mockResponseTextarea.addEventListener('blur', parseJson);
     randomJson.addEventListener('click', notifyBackgroundScriptForJson);
     saveMockButton.addEventListener('click', saveOrEditMock);
+    statusCode.addEventListener('blur', () => validateStatusCode('New Rule'))
+    statusCode.addEventListener('input', () => limitToThreeDigits('New Rule'))
+
+    // Rule list section
     ruleListSearchSelect.addEventListener('click', showHideSearchInput);
     ruleListSearchSelect.addEventListener('click', renderMocksList);
     ruleListSearchSelect.addEventListener('change', renderMocksList);
     ruleListSearchSelectMethod.addEventListener('change', renderMocksList);
+    ruleListSearchInput.addEventListener('blur', validateStatusCode('Rule List'));
+    ruleListSearchInput.addEventListener('input', () => limitToThreeDigits('Rule List') )
     ruleListSearchInput.addEventListener('input', renderMocksList);
-    ruleListSearchLabel.addEventListener('click', renderMocksList);
-
-    // Rule list section
-    statusCode.addEventListener('input', (e) => {
-        if (e.target.value.length > 3) {
-            e.target.value = e.target.value.slice(0, 3);
-        }
-    })
 
     // Options menu
     options[0].onmouseenter = function () {
