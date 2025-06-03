@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EZ Mocker",
+  "author": "Sergio Lara Guardiola",
   "version": "0.1",
   "description": "Easily mock API responses in your browser.",
   "permissions": [
