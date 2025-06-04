@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const aliasInput = document.querySelector('#alias');
     const startStopImg = document.querySelector('#start-stop');
     const headerPopup = document.querySelector('.header-popup');
+    const responseBody = document.querySelector('.response-body');
+    const responseHeaders = document.querySelector('.response-headers');
+    const inputResponseBody = document.querySelector('#tab3');
+    const inputResponseHeaders = document.querySelector('#tab4');
+    const wholeMockResponse = [inputResponseBody, inputResponseHeaders];
     const popupTimer = 5000;
     let popupTimeoutId;
 
@@ -97,6 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         optionsContainer.style.left = position;
         toggleOptionsVisibility();
+    }
+
+    const showHideResponseContainer = () => {
+        if(inputResponseBody.checked) {
+            responseBody.style.display = "flex";
+            responseHeaders.style.display = "none";
+        } else {
+            responseBody.style.display = "none";
+            responseHeaders.style.display = "flex";
+        }
     }
 
     const handleStartStopLabel = async () => {
@@ -606,6 +621,9 @@ document.addEventListener('DOMContentLoaded', () => {
     saveMockButton.addEventListener('click', saveOrEditMock);
     statusCode.addEventListener('blur', () => validateStatusCode('New Rule'))
     statusCode.addEventListener('input', () => limitToXDigits('New Rule', 3))
+    wholeMockResponse.forEach((input) => {
+        input.addEventListener('click', showHideResponseContainer)
+    })
 
     // Rule list section
     ruleListSearchSelect.addEventListener('click', showHideSearchInput);
