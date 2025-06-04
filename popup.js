@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const httpStatusCodeInput = document.getElementById('http-status-code');
     const editMockIdInput = document.getElementById('edit-mock-id');
     const tabLabelNewRule = document.querySelector('#tab-label-1');
+    const tabLabelStartStop = document.querySelector('#tab-label-3');
     const optionsContainer = document.querySelector('.options-container');
     const tabLabels = [...document.querySelectorAll('.tab-label')];
     const tabInputs = [...document.querySelectorAll('.tab-input')];
@@ -41,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const httpMethodNames = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"];
     const matchTypeNames = ["contains", "exact", "startsWith", "endsWith", "regex"];
-    
+
     const collectionRequiredFields = [
         'alias',
         'id',
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let areRulesActive = null;
 
     const clearForm = () => {
-        if(urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
+        if (urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
             urlPatternInput.value = '';
             mockResponseTextarea.value = '';
             httpMethod.value = 'get';
@@ -77,6 +78,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const showHideStartStop = () => {
+        areRulesActive = mocks.some(mock => mock.isActive);
+        if (mocks.length === 0) {
+            tabLabelStartStop.style.display = "none";
+        }
+        else {
+            tabLabelStartStop.style.display = "flex";
+            startStopImg.src = areRulesActive
+                ? "images/stop.svg"
+                : "images/active.svg";
+        }
+    }
+
+    const showHideOptions = (position) => {
+        if (optionsContainer.classList.contains('hidden')) {
+            toggleOptionsVisibility();
+        }
+        optionsContainer.style.left = position;
+        toggleOptionsVisibility();
+    }
+
+    const handleStartStopLabel = async () => {
+        if (areRulesActive) {
+            previousMockStates = mocks.map(mock => mock.isActive);
+            mocks.forEach(mock => mock.isActive = false);
+            renderPopup("HTTP interception stopped")
+        } else {
+            renderPopup("HTTP interception activated")
+            if (previousMockStates.length > 0) {
+                mocks.forEach((mock, index) => {
+                    mock.isActive = previousMockStates[index];
+                });
+            } else {
+                mocks.forEach(mock => mock.isActive = true);
+            }
+        }
+        await saveMocksToStorage();
+        loadMocks();
+        notifyBackgroundScriptForRules();
+    }
+
+    const handleOptionsLabel = () => {
+        if (tabInputs[0].checked) {
+            optionsContainer.style.left = "720px";
+        } else {
+            optionsContainer.style.left = "1520px";
+        }
+        toggleOptionsVisibility();
+    }
+
     const saveMocksToStorage = () => {
         return new Promise(resolve => {
             chrome.storage.local.set({ mocks: mocks }, () => {
@@ -90,10 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.get('mocks', (data) => {
             if (data.mocks) {
                 mocks = data.mocks;
-                areRulesActive = mocks.some(mock => mock.isActive);
-                startStopImg.src = areRulesActive
-                    ? "images/stop.svg"
-                    : "images/active.svg";
+                showHideStartStop();
                 renderMocksList();
             }
         });
@@ -103,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const merged = [...existingMocks];
         let newCount = 0;
         let updatedCount = 0;
-    
+
         for (const imported of importedMocks) {
             const index = merged.findIndex(m => m.id === imported.id);
             if (index !== -1) {
@@ -114,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 newCount++;
             }
         }
-    
+
         return { merged, newCount, updatedCount };
     };
 
@@ -147,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (filterBy === 'httpCode') {
             filteredMocks = mocks.filter(mock => mock.statusCode.toString() === searchTerm);
         }
-        console.log(mocks)
+
         return filteredMocks;
     }
 
@@ -238,10 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMocksList();
             notifyBackgroundScriptForRules();
         }
-        areRulesActive = mocks.some(mock => mock.isActive);
-        startStopImg.src = areRulesActive
-            ? "images/stop.svg"
-            : "images/active.svg";
+        showHideStartStop();
     }
 
     const deleteMock = async (id) => {
@@ -250,7 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveMocksToStorage();
         renderMocksList();
         notifyBackgroundScriptForRules();
-        renderPopup(`Rule ${deletedMock.method} ${ deletedMock.alias !== "" ? deletedMock.alias : deletedMock.urlPattern.length > 20 ? deletedMock.urlPattern.substring(0,20) + "..." : deletedMock.urlPattern} has been removed`)
+        showHideStartStop();
+        renderPopup(`Rule ${deletedMock.method} ${deletedMock.alias !== "" ? deletedMock.alias : deletedMock.urlPattern.length > 20 ? deletedMock.urlPattern.substring(0, 20) + "..." : deletedMock.urlPattern} has been removed`)
     }
 
     const notifyBackgroundScriptForRules = () => {
@@ -344,9 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMocksList();
         notifyBackgroundScriptForRules();
         clearForm();
-        isNewSave 
-            ? renderPopup("Rule saved") 
-            : renderPopup(`Rule ${mocks[mockIndex].method} ${ mocks[mockIndex].alias !== "" ? mocks[mockIndex].alias : mocks[mockIndex].urlPattern.length > 20 ? mocks[mockIndex].urlPattern.substring(0,20) + "..." : mocks[mockIndex].urlPattern} has been edited`)
+        showHideStartStop();
+        isNewSave
+            ? renderPopup("Rule saved")
+            : renderPopup(`Rule ${mocks[mockIndex].method} ${mocks[mockIndex].alias !== "" ? mocks[mockIndex].alias : mocks[mockIndex].urlPattern.length > 20 ? mocks[mockIndex].urlPattern.substring(0, 20) + "..." : mocks[mockIndex].urlPattern} has been edited`)
     }
 
     const showHideSearchInput = () => {
@@ -356,14 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (ruleListSearchSelect.value === 'httpCode') {
             ruleListSearchInput.type = 'number';
             ruleListSearchInput.value = '200';
-            ruleListSearchInput.maxLength = 3;
-            ruleListSearchInput.min = 100;
-            ruleListSearchInput.max = 599;
-            ruleListSearchInput.addEventListener('input', (e) => {
-                if (e.target.value.length > 3) {
-                    e.target.value = e.target.value.slice(0, 3);
-                }
-            })
             ruleListSearchInput.style.display = 'inline-block';
             ruleListSearchSelectMethod.style.display = 'none';
         } else if (ruleListSearchSelect.value === 'method') {
@@ -450,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return false;
                 }
             }
-            
+
             if (mock['urlPattern'] === '') {
                 renderPopup("Invalid collection format: urlPattern invalid");
                 return false;
@@ -499,14 +538,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = document.createElement('img');
 
         span.textContent = text;
-        img.onclick = function() {
+        img.onclick = function () {
             span.remove();
             img.remove();
             headerPopup.style.display = 'none';
             clearTimeout(popupTimeoutId);
         }
         img.src = 'images/close.svg'
-        
+
         if (headerPopup.querySelector('span')) {
             headerPopup.querySelector('span').textContent = span.textContent;
         } else {
@@ -515,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         clearTimeout(popupTimeoutId);
-        
+
         popupTimeoutId = setTimeout(() => {
             span.remove();
             img.remove();
@@ -528,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let selectedStatusCodeSection = input === "New Rule" ? true : false
             let domInput = selectedStatusCodeSection ? httpStatusCodeInput : ruleListSearchInput;
             let value = parseInt(domInput.value);
-            
+
             if (value < 100 || value > 599) {
                 if (value < 100) {
                     domInput.value = 100
@@ -536,18 +575,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     domInput.value = 599
                 }
             }
-            
+
         } catch (error) {
             console.log(error)
         }
     }
 
-    limitToThreeDigits = (section) => {
+    limitToXDigits = (section, limit) => {
         let selectedStatusCodeSection = section === "New Rule" ? true : false
         let domInput = selectedStatusCodeSection ? httpStatusCodeInput : ruleListSearchInput;
 
-        if( domInput.value.length > 3) {
-            domInput.value = domInput.value.slice(0,3);
+        if (domInput.value.length > limit) {
+            domInput.value = domInput.value.slice(0, limit);
         }
     }
 
@@ -555,84 +594,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // header
     tabLabelNewRule.addEventListener('click', clearForm);
-    
-    tabLabels[0].onclick = function () {
-        if (optionsContainer.classList.contains('hidden')) {
-            toggleOptionsVisibility();
-        }
-        optionsContainer.style.left = "720px";
-        toggleOptionsVisibility();
-    }
-
-    tabLabels[1].onclick = function () {
-        if (optionsContainer.classList.contains('hidden')) {
-            toggleOptionsVisibility();
-        }
-        optionsContainer.style.left = "1520px";
-        toggleOptionsVisibility();
-    }
-
-    tabLabels[2].onclick = async function () {
-        if (areRulesActive) {
-            previousMockStates = mocks.map(mock => mock.isActive);
-            mocks.forEach(mock => mock.isActive = false);
-            renderPopup("HTTP interception stopped")
-        } else {
-            renderPopup("HTTP interception activated")
-            if (previousMockStates.length > 0) {
-                mocks.forEach((mock, index) => {
-                    mock.isActive = previousMockStates[index];
-                });
-            } else {
-                mocks.forEach(mock => mock.isActive = true);
-            }
-        }
-        await saveMocksToStorage();
-        loadMocks();
-        notifyBackgroundScriptForRules();
-    }
-
-    tabLabels[3].onclick = function () {
-        if (tabInputs[0].checked) {
-            optionsContainer.style.left = "720px";
-        } else {
-            optionsContainer.style.left = "1520px";
-        }
-        toggleOptionsVisibility();
-    }
-    headerPopup.addEventListener('load', () => {
-        headerPopup.style.display = 'flex';
-    })
+    tabLabels[0].onclick = () => showHideOptions("720px")
+    tabLabels[1].onclick = () => showHideOptions("1520px")
+    tabLabels[2].onclick = handleStartStopLabel;
+    tabLabels[3].onclick = handleOptionsLabel;
+    headerPopup.addEventListener('load', () => headerPopup.style.display = 'flex')
 
     // create rule section
     mockResponseTextarea.addEventListener('blur', parseJson);
     randomJson.addEventListener('click', notifyBackgroundScriptForJson);
     saveMockButton.addEventListener('click', saveOrEditMock);
     statusCode.addEventListener('blur', () => validateStatusCode('New Rule'))
-    statusCode.addEventListener('input', () => limitToThreeDigits('New Rule'))
+    statusCode.addEventListener('input', () => limitToXDigits('New Rule', 3))
 
     // Rule list section
     ruleListSearchSelect.addEventListener('click', showHideSearchInput);
     ruleListSearchSelect.addEventListener('click', renderMocksList);
     ruleListSearchSelect.addEventListener('change', renderMocksList);
+    ruleListSearchSelect.addEventListener('change', () => {
+        if (ruleListSearchInput.type === "number") limitToXDigits('Rule List', 3)
+        else { limitToXDigits('Rule List', 40) }
+    });
     ruleListSearchSelectMethod.addEventListener('change', renderMocksList);
     ruleListSearchInput.addEventListener('blur', validateStatusCode('Rule List'));
-    ruleListSearchInput.addEventListener('input', () => limitToThreeDigits('Rule List') )
+    ruleListSearchInput.addEventListener('input', () => {
+        if (ruleListSearchInput.type === "number") limitToXDigits('Rule List', 3)
+        else { limitToXDigits('Rule List', 40) }
+    });
     ruleListSearchInput.addEventListener('input', renderMocksList);
 
     // Options menu
-    options[0].onmouseenter = function () {
-        optionIcons[0].src = "images/import-white.svg";
-    }
-    options[0].onmouseleave = function () {
-        optionIcons[0].src = "images/import-black.svg";
-    }
-    options[1].onmouseenter = function () {
-        optionIcons[1].src = "images/export-white.svg";
-    }
-    options[1].onmouseleave = function () {
-        optionIcons[1].src = "images/export-black.svg";
-    }
+    options[0].onmouseenter = () => optionIcons[0].src = "images/import-white.svg";
+    options[0].onmouseleave = () => optionIcons[0].src = "images/import-black.svg";
+    options[1].onmouseenter = () => optionIcons[1].src = "images/export-white.svg";
+    options[1].onmouseleave = () => optionIcons[1].src = "images/export-black.svg";
     options[0].addEventListener('click', importCollection);
     options[1].addEventListener('click', exportCollection);
 });
