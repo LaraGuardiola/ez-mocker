@@ -12,6 +12,10 @@ body {
     background-color: #f5f5f5;
 }
 
+label, h2 {
+    user-select: none;
+}
+
 .header {
     display: flex;
     align-items: center;
@@ -65,7 +69,7 @@ body {
 .container-wrapper {
     display: flex;
     width: 200%; /* 2 secciones */
-    transition: transform 0.4s ease;
+    transition: transform  ease ease;
 }
 
 .slide {
@@ -478,6 +482,13 @@ button:hover {
     margin-bottom: 0.3em;
     height: 30px;
     background-color: #f8f8f8;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.header-list-item:hover {
+    background-color: #ff5c35;
+    color: white;
 }
 
 .header-list-item-checkbox {
