@@ -462,3 +462,40 @@ button:hover {
 #new-header-span {
     font-size: 38px;
 }
+
+.header-list {
+    list-style: none;
+}
+
+.header-list-item {
+    display: flex;
+    align-items: center;
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
+    height: 30px;
+    background-color: #f8f8f8;
+}
+
+.header-list-item-checkbox {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.header-list-item-key, .header-list-item-value {
+    width: 250px !important; 
+    height: 20px;
+}  
+
+.header-list-item-key {
+    margin-right: 1.5em;
+}
+
+.header-list-item-value {
+    margin-right: 100px;
+    width: 350px !important;
+}
+
+.rotated {
+    transform: rotate(45deg);
+    font-size: 38px;
+}
