@@ -393,7 +393,6 @@ button:hover {
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding: 1em;
 }
 
 .response-body {
@@ -402,7 +401,7 @@ button:hover {
 
 .response-headers {
     height: 312px;
-    background-color: #2ee800;
+    background-color: white;
     display: none;
     margin-bottom: 1em;
 }
@@ -432,4 +431,34 @@ button:hover {
 }
 #tab3:checked ~ .response-container-header #response-headers-label {
     margin-left: 23px;
+}
+
+.headers-top {
+    display: flex;
+    height: 30px;
+    background-color: #d5d5d5;
+    justify-content: flex-start;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.headers-top > input {
+    height: auto;
+}
+
+#input-headers-top-key {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+#key-span {
+    margin-right: 250px;
+}
+
+#value-span {
+    margin-right: 382px;
+}
+
+#new-header-span {
+    font-size: 38px;
 }
