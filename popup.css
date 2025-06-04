@@ -461,10 +461,14 @@ button:hover {
 
 #new-header-span {
     font-size: 38px;
+    cursor: pointer;
+    user-select: none;
 }
 
-.header-list {
+.headers-list {
     list-style: none;
+    height: 280px;
+    overflow-y: auto;
 }
 
 .header-list-item {
@@ -491,11 +495,12 @@ button:hover {
 }
 
 .header-list-item-value {
-    margin-right: 100px;
+    margin-right: 80px;
     width: 350px !important;
 }
 
 .rotated {
     transform: rotate(45deg);
     font-size: 38px;
+    user-select: none;
 }

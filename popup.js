@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const responseHeaders = document.querySelector('.response-headers');
     const inputResponseBody = document.querySelector('#tab3');
     const inputResponseHeaders = document.querySelector('#tab4');
+    const newHeaderSpan = document.querySelector('#new-header-span');
     const wholeMockResponse = [inputResponseBody, inputResponseHeaders];
     const popupTimer = 5000;
     let popupTimeoutId;
@@ -261,6 +262,44 @@ document.addEventListener('DOMContentLoaded', () => {
             mocksListUl.appendChild(listItem);
         });
     }
+
+    const addHeaderListItem = () => {
+        const li = document.createElement('li');
+        li.className = 'header-list-item';
+    
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'header-list-item-checkbox';
+        checkbox.checked = true;
+    
+        const inputKey = document.createElement('input');
+        inputKey.type = 'text';
+        inputKey.className = 'header-list-item-key';
+        inputKey.placeholder = 'Key';
+    
+        const inputValue = document.createElement('input');
+        inputValue.type = 'text';
+        inputValue.className = 'header-list-item-value';
+        inputValue.placeholder = 'Value';
+    
+        const span = document.createElement('span');
+        span.className = 'rotated';
+        span.textContent = '+';
+    
+        span.addEventListener('click', () => {
+            li.remove();
+        });
+    
+        li.appendChild(checkbox);
+        li.appendChild(inputKey);
+        li.appendChild(inputValue);
+        li.appendChild(span);
+    
+        // Agregar el <li> al <ul>
+        const ul = document.querySelector('.headers-list');
+        ul.appendChild(li);
+    }
+    
 
     const parseJson = () => {
         try {
@@ -623,7 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
     statusCode.addEventListener('input', () => limitToXDigits('New Rule', 3))
     wholeMockResponse.forEach((input) => {
         input.addEventListener('click', showHideResponseContainer)
-    })
+    });
+    newHeaderSpan.addEventListener('click', addHeaderListItem);
 
     // Rule list section
     ruleListSearchSelect.addEventListener('click', showHideSearchInput);
