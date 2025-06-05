@@ -136,8 +136,6 @@
     window.fetch = function (resource, init) {
         const url = typeof resource === 'string' ? resource : resource.url;
 
-        console.log('🔴 INTERCEPTING fetch request:', url);
-
         const mock = findMatchingMock(url);
 
         if (!mock) {
@@ -145,10 +143,12 @@
             return originalFetch(resource, init);
         }
 
-        const headers = new Headers({
+        console.log('🔴 INTERCEPTING fetch request:', url);
+
+        const headers = Object.assign({
             'Content-Type': 'application/json',
             'X-Intercepted-By': 'EZ mocker'
-        })
+        }, mock?.headers);
 
         const mockResponse = new Response(
             JSON.stringify(mock.response),
@@ -159,7 +159,13 @@
             }
         );
 
-        console.log('🔴 Returning mock:', mock.response, mockResponse.status, mockResponse.statusText);
+        console.log('🔴 Returning mock:', {
+            response: mock.response,
+            status: mockResponse.status,
+            statusText: mockResponse.statusText,
+            headers: mockResponse.headers
+        });
+
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve(mockResponse);
@@ -175,6 +181,7 @@
         let url = '';
         let method = '';
         let mock = null;
+        let isIntercepted = false;
 
         const originalOpen = xhr.open;
         xhr.open = function (reqMethod, reqUrl, async = true, user, password) {
@@ -185,8 +192,7 @@
 
         const originalSend = xhr.send;
         xhr.send = function (...args) {
-            console.log('🔵 INTERCEPTING XHR request:', method, url);
-
+            
             mock = findMatchingMock(url);
 
             if (!mock) {
@@ -194,60 +200,111 @@
                 return originalSend.apply(xhr, args);
             }
 
-            // Intercepting onReadyStateChange
+            console.log('🔵 INTERCEPTING XHR request:', method, url);
+            isIntercepted = true;
+
+            // Capture original handler before sending
             const originalOnReadyStateChange = xhr.onreadystatechange;
-            xhr.onreadystatechange = function () {
+
+            // Prepare mock before sending
+            const mockResponse = JSON.stringify(mock.response);
+            const status = mock.statusCode || 200;
+            const statusText = httpStatusTexts[status] || 'Mocked';
+
+            // Headers base
+            const baseHeaders = {
+                'content-type': 'application/json',
+                'x-intercepted-by': 'EZ mocker'
+            };
+
+            let mockHeaders = { ...baseHeaders };
+
+            if (mock.headers && typeof mock.headers === 'object') {
+                // all headers to lowerCase makes life easier when pulling up this kind of stuff
+                Object.entries(mock.headers).forEach(([key, value]) => {
+                    mockHeaders[key.toLowerCase()] = value;
+                });
+            }
+
+            // overwrite all header methods
+            xhr.getResponseHeader = function (name) {
+                if (!name) return null;
+                const headerName = name.toLowerCase();
+                return mockHeaders[headerName] || null;
+            };
+
+            xhr.getAllResponseHeaders = function () {
+                return Object.entries(mockHeaders)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join('\r\n');
+            };
+
+            // Overwrite RIGHT BEFORE the SEND event
+            xhr.onreadystatechange = function (event) {
+                if (!isIntercepted) {
+                    if (originalOnReadyStateChange) {
+                        return originalOnReadyStateChange.apply(this, arguments);
+                    }
+                    return;
+                }
+
                 if (xhr.readyState === 4) {
-                    // response
-                    const mockResponse = JSON.stringify(mock.response);
-                    const status = mock.statusCode || 200;
-                    const statusText = httpStatusTexts[status] || 'Mocked';
+                    // Prevent original request replacing our mock response
+                    event && event.stopImmediatePropagation && event.stopImmediatePropagation();
 
-                    // headers
-                    const mockHeaders = Object.assign({
-                        'content-type': 'application/json',
-                        'x-intercepted-by': 'EZ mocker'
-                    }, mock?.headers);
-
+                    // Overwrite response properties
                     overrideReadonlyProperty(xhr, 'responseText', mockResponse);
                     overrideReadonlyProperty(xhr, 'response', mockResponse);
                     overrideReadonlyProperty(xhr, 'status', status);
                     overrideReadonlyProperty(xhr, 'statusText', statusText);
 
-                    xhr.getResponseHeader = function (name) {
-                        if (!name) return null;
-                        return mockHeaders[name.toLowerCase()] || null;
-                    };
+                    console.log('🔵 Returning mock:', {
+                        response: mock.response,
+                        status: mock.statusCode,
+                        statusText: httpStatusTexts[mock.statusCode],
+                        headers: mockHeaders
+                    });
 
-                    xhr.getAllResponseHeaders = function () {
-                        return Object.entries(mockHeaders)
-                            .map(([k, v]) => `${k}: ${v}`)
-                            .join('\n');
-                    };
-
-                    console.log('🔵 Returning mock:', mock.response, mock.statusCode, httpStatusTexts[mock.statusCode], xhr.getAllResponseHeaders());
-                }
-
-                if (originalOnReadyStateChange) {
-                    return originalOnReadyStateChange.apply(this, arguments);
+                    // Call original handler if exists
+                    if (originalOnReadyStateChange) {
+                        try {
+                            originalOnReadyStateChange.apply(this, arguments);
+                        } catch (e) {
+                            console.warn('⚠️ Error in original onreadystatechange:', e);
+                        }
+                    }
+                } else {
+                    // for states before 4, call if it exists original handler
+                    if (originalOnReadyStateChange) {
+                        originalOnReadyStateChange.apply(this, arguments);
+                    }
                 }
             };
 
+            // Send original request but intercept it with the mock
             return originalSend.apply(xhr, args);
         };
 
         return xhr;
     }
 
-    // Override read-only prop in xhr
+    // Overwrite readonly properties
     function overrideReadonlyProperty(obj, prop, value) {
         try {
             Object.defineProperty(obj, prop, {
-                get: typeof value === 'function' ? value : () => value,
+                value: value,
+                writable: false,
                 configurable: true
             });
         } catch (e) {
-            console.warn(`⚠️ Failed to override ${prop}:`, e);
+            try {
+                Object.defineProperty(obj, prop, {
+                    get: typeof value === 'function' ? value : () => value,
+                    configurable: true
+                });
+            } catch (e2) {
+                console.warn(`⚠️ Failed to override ${prop}:`, e2);
+            }
         }
     }
 

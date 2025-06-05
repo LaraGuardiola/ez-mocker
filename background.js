@@ -8,11 +8,18 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
+chrome.runtime.onStartup.addListener(async () => {
+  try {
+    await changeIcons();
+  } catch (error) {
+    console.error("Error trying to change icon on startup:", error);
+  }
+});
+
 // Listener for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("BACKGROUND: Received message from popup:", request);
   if (request.type === "UPDATE_RULES") {
-    
+    console.log("BACKGROUND: Received message from popup:", request);
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (tabs.length > 0) {
         await changeIcons();
