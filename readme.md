@@ -30,7 +30,7 @@ Ez and sexy. 3 main buttons, 2 sections:
   - **Delay (in milliseconds)** (Only available with fetch, sorry, shit's hard enough)
 
 - 🔍 Powerful URL filtering:
-  - `INCLUDES`, `STARTS WITH`, `ENDS WITH`, or `EXACT MATCH`
+  - `INCLUDES`, `STARTS WITH`, `ENDS WITH`, `EXACT MATCH` or `REGEX`
 
 - 🧭 Match by:
   - **HTTP method**
