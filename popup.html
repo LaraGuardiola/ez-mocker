@@ -79,12 +79,48 @@
                         <input type="text" id="alias" placeholder="/api/test">
                     </div>
                 </div>
-    
-                <div class="form-group">
-                    <label for="mock-response">RESPONSE</label>
-                    <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }'></textarea>
-                    <small id="json-error" class="error-message" style="display:none;">Invalid JSON syntax</small>
-                </div>
+
+                <!-- Inputs for switching between tabs -->
+                <form action="">
+                    <input class="tab-input" type="radio" id="tab3" name="tabs" checked>
+                    <input class="tab-input" type="radio" id="tab4" name="tabs">
+                    <div class="response-container-header">
+                        <label id="response-body-label" for="tab3">RESPONSE BODY</label>
+                        <label id="response-headers-label" for="tab4">RESPONSE HEADERS</label>
+                    </div>
+                    
+                    <div class="response-container">
+                        <div class="response-container-wrapper">
+                            <section class="response-slide response-body">
+                                <div class="form-group json" >                     
+                                    <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }' spellcheck="false"></textarea>
+                                    <small id="json-error" class="error-message" style="display:none;">Invalid JSON syntax</small>
+                                </div>
+                            </section>
+                            
+                            <section class="response-slide response-headers">
+                                <div class="form-group headers">
+                                    <section class="headers-top">
+                                        <input type="checkbox" name="" id="input-headers-top-key" checked="true">
+                                        <span id="key-span"><strong>Key</strong></span>
+                                        <span id="value-span"><strong>Value</strong></span>
+                                        <span id="new-header-span">+</span>
+                                        <img id="header-trash" src="images/trash.svg" alt="">
+                                    </section>
+                                    <section class="headers-main">
+                                        <ul class="headers-list">
+                                              
+                                        </ul>
+                                    </section>
+                                </div>
+                            </section>
+                        </div>
+                        
+                    </div>
+                </form>
+                
+
+                
 
                 <div class="bottom-action">
                     <input type="hidden" id="random-json-id"> <button id="random-json">Random json</button>

@@ -21,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const aliasInput = document.querySelector('#alias');
     const startStopImg = document.querySelector('#start-stop');
     const headerPopup = document.querySelector('.header-popup');
+    const responseBody = document.querySelector('.response-body');
+    const responseHeaders = document.querySelector('.response-headers');
+    const inputResponseBody = document.querySelector('#tab3');
+    const inputResponseHeaders = document.querySelector('#tab4');
+    const newHeaderSpan = document.querySelector('#new-header-span');
+    const inputHeadersTopKey = document.querySelector('#input-headers-top-key');
+    const headersImg = document.querySelector('#header-trash');
+    const wholeMockResponse = [inputResponseBody, inputResponseHeaders];
     const popupTimer = 5000;
     let popupTimeoutId;
 
@@ -61,6 +69,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let json = null;
     let areRulesActive = null;
 
+    const deleteAllLiHeaders = () => {
+        [...document.querySelectorAll('.header-list-item')].forEach(child => {
+            child.remove();
+        })
+    }
+
+    const toggleAllHeaderListItems = () => {
+        let headers = [...document.querySelectorAll('.header-list-item')]
+        if(inputHeadersTopKey.checked) {
+            headers.forEach(child => {
+                child.firstChild.checked = true;
+            })
+        } else {
+            headers.forEach(child => {
+                child.firstChild.checked = false;
+            })
+        }
+    }
+
     const clearForm = () => {
         if (urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
             urlPatternInput.value = '';
@@ -72,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlMatchTypeSelect.value = 'contains';
             editMockIdInput.value = '';
             jsonError.style.display = 'none';
+            deleteAllLiHeaders();
             urlPatternInput.focus();
         } else {
             return;
@@ -97,6 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         optionsContainer.style.left = position;
         toggleOptionsVisibility();
+    }
+
+    const showHideResponseContainer = () => {
+        if (inputResponseBody.checked) {
+            responseBody.style.display = "flex";
+            responseHeaders.style.display = "none";
+        } else {
+            responseBody.style.display = "none";
+            responseHeaders.style.display = "flex";
+        }
     }
 
     const handleStartStopLabel = async () => {
@@ -247,6 +285,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const addHeaderListItem = (key = '', value = '') => {
+        const li = document.createElement('li');
+        li.className = 'header-list-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'header-list-item-checkbox';
+        checkbox.checked = true;
+
+        const inputKey = document.createElement('input');
+        inputKey.type = 'text';
+        inputKey.className = 'header-list-item-key';
+        inputKey.placeholder = 'Key';
+
+        const inputValue = document.createElement('input');
+        inputValue.type = 'text';
+        inputValue.className = 'header-list-item-value';
+        inputValue.placeholder = 'Value';
+
+        const span = document.createElement('span');
+        span.className = 'rotated';
+        span.textContent = '+';
+
+        span.addEventListener('click', () => {
+            li.remove();
+        });
+
+        li.appendChild(checkbox);
+        li.appendChild(inputKey);
+        li.appendChild(inputValue);
+        li.appendChild(span);
+
+        const ul = document.querySelector('.headers-list');
+        ul.appendChild(li);
+
+        if(key || value) {
+            inputKey.value = key
+            inputValue.value = value
+        }
+    }
+
+
     const parseJson = () => {
         try {
             const currentJson = mockResponseTextarea.value;
@@ -265,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const populateFormForEdit = (id) => {
         const mockToEdit = mocks.find(m => m.id === id);
         if (mockToEdit) {
+            deleteAllLiHeaders();
             document.querySelector('#tab1').checked = true;
             urlPatternInput.value = mockToEdit.urlPattern;
             urlMatchTypeSelect.value = mockToEdit.matchType;
@@ -274,6 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;
             editMockIdInput.value = mockToEdit.id; //Save the ID in order to know we are editing an existing mock
+            Object.entries(mockToEdit.headers).forEach(([key, value]) => {
+                addHeaderListItem(key, value)
+            });
             urlPatternInput.focus();
         }
     }
@@ -313,10 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.runtime.sendMessage({ type: "GET_JSON", json: [] }, response => {
             if (chrome.runtime.lastError) {
                 console.error("Error asking for json to the background:", chrome.runtime.lastError.message);
+                renderPopup("Error generating json");
             } else {
                 console.log("Background notified:", response);;
                 loadJson();
                 populateTextAreaWithJson();
+                renderPopup("Json generated");
             }
         });
     }
@@ -337,6 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusCode = parseInt(httpStatusCodeInput.value) || 200;
         const alias = aliasInput.value.trim();
         const editingId = editMockIdInput.value ? parseInt(editMockIdInput.value) : null;
+        const headers =  getHeaders();
 
         if (!urlPattern || !responseStr) {
             renderPopup('URL pattern and response are required');
@@ -366,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusCode,
                 alias: alias ?? null,
                 isActive: true,
+                headers
             };
             mocks.push(newMock);
         }
@@ -382,7 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 response: mockResponseJSON,
                 rawResponse: responseStr,
                 statusCode,
-                alias: alias ?? null
+                alias: alias ?? null,
+                headers
             };
         }
 
@@ -490,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            if (mock['urlPattern'] === '') {
+            if (mock['urlPattern'] === '' ||  typeof mock['urlPattern'] !== 'string') {
                 renderPopup("Invalid collection format: urlPattern invalid");
                 return false;
             }
@@ -524,6 +613,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (typeof mock['response'] === 'Object') {
                 renderPopup("Invalid collection format");
+                return false;
+            }
+            if (typeof mock['headers'] === 'Object') {
+                renderPopup("Invalid collection format: Invalid headers");
                 return false;
             }
         }
@@ -581,13 +674,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    limitToXDigits = (section, limit) => {
+    const limitToXDigits = (section, limit) => {
         let selectedStatusCodeSection = section === "New Rule" ? true : false
         let domInput = selectedStatusCodeSection ? httpStatusCodeInput : ruleListSearchInput;
 
         if (domInput.value.length > limit) {
             domInput.value = domInput.value.slice(0, limit);
         }
+    }
+
+    const getHeaders = () => {
+        const lis = document.querySelectorAll('.header-list-item');
+        const headers = {};
+
+        lis.forEach(item => {
+            const checkbox = item.querySelector('.header-list-item-checkbox')
+            const keyInput = item.querySelector('.header-list-item-key');
+            const valueInput = item.querySelector('.header-list-item-value');
+            const key = keyInput.value.trim();
+            const value = valueInput.value.trim();
+
+            if (key !== '' && checkbox.checked) {
+                headers[key] = value;
+            }
+        });
+
+        return headers;
     }
 
     loadMocks();
@@ -606,6 +718,12 @@ document.addEventListener('DOMContentLoaded', () => {
     saveMockButton.addEventListener('click', saveOrEditMock);
     statusCode.addEventListener('blur', () => validateStatusCode('New Rule'))
     statusCode.addEventListener('input', () => limitToXDigits('New Rule', 3))
+    wholeMockResponse.forEach((input) => {
+        input.addEventListener('click', showHideResponseContainer)
+    });
+    newHeaderSpan.addEventListener('click', () => addHeaderListItem());
+    headersImg.addEventListener('click', () => deleteAllLiHeaders());
+    inputHeadersTopKey.addEventListener('change', () => toggleAllHeaderListItems());
 
     // Rule list section
     ruleListSearchSelect.addEventListener('click', showHideSearchInput);

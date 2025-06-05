@@ -40,7 +40,7 @@ Ez and sexy. 3 main buttons, 2 sections:
 - 💀 Easily import and export your rules as a JSON collection
 - 🧩 Built without any library dependencies, just loads of caffeine
 - ⚡ Ultra lightweight — just **100KB**
-- 🧠 FREE! Your limit is chrome storage and the power of will, not even sure what's the limit
+- 🧠 FREE! Your limit is chrome storage and the power of will, I'm not even sure what's the actual limit
 ---
 
 ## 🧑‍💻 Use Case Examples
