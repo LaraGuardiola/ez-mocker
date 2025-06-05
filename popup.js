@@ -293,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.type = 'checkbox';
         checkbox.className = 'header-list-item-checkbox';
         checkbox.checked = true;
+        checkbox.title = "Disable header"
 
         const inputKey = document.createElement('input');
         inputKey.type = 'text';
@@ -307,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const span = document.createElement('span');
         span.className = 'rotated';
         span.textContent = '+';
+        span.title = "Remove header"
 
         span.addEventListener('click', () => {
             li.remove();
