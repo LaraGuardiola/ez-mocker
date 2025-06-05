@@ -382,6 +382,10 @@ button:hover {
     margin-bottom: 4px;
 }
 
+.response-container-header > label {
+    cursor: pointer;
+}
+
 .response-container {
     display: flex;
     width: 100%;
@@ -421,7 +425,9 @@ button:hover {
     margin-left: 8px;
     vertical-align: middle;
 }
-
+#tab3, #tab4 {
+    cursor: pointer;
+}
 #tab3:checked ~ .response-container-header #response-body-label::after {
     display: inline-block;
 }
@@ -514,4 +520,13 @@ button:hover {
     transform: rotate(45deg);
     font-size: 38px;
     user-select: none;
+}
+
+input[type="checkbox"] {
+    accent-color: #ff5c35;
+    /* accent-color: #2ee800 */
+}
+
+.header-list-item:hover > input[type="checkbox"] {
+    accent-color: white;
 }

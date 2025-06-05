@@ -145,10 +145,10 @@
             return originalFetch(resource, init);
         }
 
-        const headers = new Headers({
+        const headers = Object.assign({
             'Content-Type': 'application/json',
             'X-Intercepted-By': 'EZ mocker'
-        })
+        }, mock?.headers);
 
         const mockResponse = new Response(
             JSON.stringify(mock.response),
