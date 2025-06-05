@@ -18,9 +18,8 @@ chrome.runtime.onStartup.addListener(async () => {
 
 // Listener for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("BACKGROUND: Received message from popup:", request);
   if (request.type === "UPDATE_RULES") {
-    
+    console.log("BACKGROUND: Received message from popup:", request);
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (tabs.length > 0) {
         await changeIcons();
