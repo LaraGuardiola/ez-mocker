@@ -417,29 +417,32 @@ button:hover {
 #response-body-label::after,
 #response-headers-label::after {
     content: "";
-    display: none;
+    display: inline-block;
     width: 12px;
     height: 12px;
     background-color: #ff5c35;
     border-radius: 50%;
     margin-left: 8px;
     vertical-align: middle;
+    opacity: 0;
+    transition: opacity 0.2s ease; 
 }
-#tab3, #tab4 {
-    cursor: pointer;
-}
+
 #tab3:checked ~ .response-container-header #response-body-label::after {
-    display: inline-block;
+    opacity: 1; 
 }
 
 #tab4:checked ~ .response-container-header #response-headers-label::after {
-    display: inline-block;
+    opacity: 1; 
 }
 
-#tab4:checked ~ .response-container-header #response-headers-label {
-    margin-left: 43px;
+#response-body-label:hover::after, 
+#response-headers-label:hover::after {
+    opacity: 1;
+    background-color: #2ee800;
 }
-#tab3:checked ~ .response-container-header #response-headers-label {
+
+#response-headers-label{
     margin-left: 23px;
 }
 
