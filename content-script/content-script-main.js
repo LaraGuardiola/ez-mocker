@@ -82,7 +82,7 @@
     window.addEventListener('message', (event) => {
         if (event.source !== window) return;
 
-        console.log("MAIN: Received message:", event.data);
+        // console.log("MAIN: Received message:", event.data);
 
         if (event.data && event.data.type === "FROM_ISOLATED_TO_MAIN") {
             console.log(`MAIN: ${event.data.payload.length} mocks received from isolated world:`, event.data.payload);
@@ -139,7 +139,7 @@
         const mock = findMatchingMock(url);
 
         if (!mock) {
-            console.log('🔴 No matching mock found for:', url);
+            // console.log('🔴 No matching mock found for:', url);
             return originalFetch(resource, init);
         }
 
@@ -196,7 +196,7 @@
             mock = findMatchingMock(url);
 
             if (!mock) {
-                console.log('🔵 No matching mock found for:', url);
+                // console.log('🔵 No matching mock found for:', url);
                 return originalSend.apply(xhr, args);
             }
 
