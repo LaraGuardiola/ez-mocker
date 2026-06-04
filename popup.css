@@ -533,3 +533,71 @@ input[type="checkbox"] {
 .header-list-item:hover > input[type="checkbox"] {
     accent-color: white;
 }
+
+/* JSON Editor with syntax highlighting overlay */
+.json-editor-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.json-editor-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid transparent;
+    overflow: auto;
+    min-height: 100px;
+    height: 312px;
+    max-height: 312px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: #fff;
+    color: #333;
+    z-index: 1;
+}
+
+.json-editor-overlay code {
+    display: block;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.json-editor-textarea {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    color: transparent;
+    caret-color: #333;
+    resize: none;
+    margin-bottom: 0.5em;
+    min-height: 100px;
+    height: 312px;
+    max-height: 312px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.json-editor-textarea::placeholder {
+    color: #999;
+}
+
+.json-editor-textarea:focus {
+    outline: none;
+}
+
+.json-key { color: #0451a5; font-weight: 600; }
+.json-string { color: #a31515; font-weight: 600; }
+.json-number { color: #098658; font-weight: 600; }
+.json-boolean { color: #0000ff; font-weight: 600; }
+.json-null { color: #800000; font-weight: 600; }
+.json-brace { color: #333; font-weight: 600; }

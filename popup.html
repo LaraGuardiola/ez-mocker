@@ -92,8 +92,11 @@
                     <div class="response-container">
                         <div class="response-container-wrapper">
                             <section class="response-slide response-body">
-                                <div class="form-group json" >                     
-                                    <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }' spellcheck="false"></textarea>
+                                <div class="form-group json">
+                                    <div class="json-editor-wrapper">
+                                        <pre class="json-editor-overlay" aria-hidden="true"><code id="json-highlight"></code></pre>
+                                        <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }' spellcheck="false" class="json-editor-textarea"></textarea>
+                                    </div>
                                     <small id="json-error" class="error-message" style="display:none;">Invalid JSON syntax</small>
                                 </div>
                             </section>

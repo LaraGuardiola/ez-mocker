@@ -149,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
+            updateJsonHighlight();
         });
     }
 
@@ -402,11 +403,110 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parsedJson = JSON.parse(currentJson);
                 mockResponseTextarea.value = JSON.stringify(parsedJson, null, 2);
                 jsonError.style.display = 'none';
+                updateJsonHighlight();
             }
         } catch (error) {
             jsonError.textContent = 'Invalid JSON syntax';
             jsonError.style.display = 'block';
             jsonError.style.textAlign = 'right';
+        }
+    }
+
+    const highlightJSON = (text) => {
+        const escaped = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        const tokens = [];
+        let i = 0;
+        while (i < escaped.length) {
+            if (escaped[i] === '"') {
+                let str = escaped[i++];
+                while (i < escaped.length) {
+                    if (escaped[i] === '\\') {
+                        str += escaped[i] + (escaped[i + 1] || '');
+                        i += 2;
+                    } else if (escaped[i] === '"') {
+                        str += escaped[i++];
+                        break;
+                    } else {
+                        str += escaped[i++];
+                    }
+                }
+                let j = i;
+                while (j < escaped.length && (escaped[j] === ' ' || escaped[j] === '\t' || escaped[j] === '\n' || escaped[j] === '\r')) j++;
+                const isKey = escaped[j] === ':';
+                tokens.push(isKey ? '<span class="json-key">' + str + '</span>' : '<span class="json-string">' + str + '</span>');
+            } else if ((escaped[i] >= '0' && escaped[i] <= '9') || (escaped[i] === '-' && i + 1 < escaped.length && escaped[i + 1] >= '0' && escaped[i + 1] <= '9')) {
+                let num = '';
+                if (escaped[i] === '-') num += escaped[i++];
+                while (i < escaped.length && escaped[i] >= '0' && escaped[i] <= '9') num += escaped[i++];
+                if (i < escaped.length && escaped[i] === '.') {
+                    num += escaped[i++];
+                    while (i < escaped.length && escaped[i] >= '0' && escaped[i] <= '9') num += escaped[i++];
+                }
+                if (i < escaped.length && (escaped[i] === 'e' || escaped[i] === 'E')) {
+                    num += escaped[i++];
+                    if (i < escaped.length && (escaped[i] === '+' || escaped[i] === '-')) num += escaped[i++];
+                    while (i < escaped.length && escaped[i] >= '0' && escaped[i] <= '9') num += escaped[i++];
+                }
+                tokens.push('<span class="json-number">' + num + '</span>');
+            } else if (escaped.substring(i, i + 4) === 'true') {
+                tokens.push('<span class="json-boolean">true</span>');
+                i += 4;
+            } else if (escaped.substring(i, i + 5) === 'false') {
+                tokens.push('<span class="json-boolean">false</span>');
+                i += 5;
+            } else if (escaped.substring(i, i + 4) === 'null') {
+                tokens.push('<span class="json-null">null</span>');
+                i += 4;
+            } else if ('{}[]'.includes(escaped[i])) {
+                tokens.push('<span class="json-brace">' + escaped[i++] + '</span>');
+            } else {
+                tokens.push(escaped[i++]);
+            }
+        }
+        return tokens.join('');
+    }
+
+    const updateJsonHighlight = () => {
+        const code = document.getElementById('json-highlight');
+        if (!code) return;
+        const text = mockResponseTextarea.value;
+        code.innerHTML = text ? highlightJSON(text) : '';
+    }
+
+    const syncJsonHighlightScroll = () => {
+        const overlay = document.querySelector('.json-editor-overlay');
+        if (overlay) {
+            overlay.scrollTop = mockResponseTextarea.scrollTop;
+            overlay.scrollLeft = mockResponseTextarea.scrollLeft;
+        }
+    }
+
+    const handleJsonIndentation = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const start = mockResponseTextarea.selectionStart;
+            const value = mockResponseTextarea.value;
+            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+            const currentLine = value.substring(lineStart, start);
+            const indentMatch = currentLine.match(/^(\s*)/);
+            const currentIndent = indentMatch ? indentMatch[1] : '';
+            const trimmedLine = currentLine.trimEnd();
+            const lastChar = trimmedLine.slice(-1);
+            const needsClosure = lastChar === '{' || lastChar === '[';
+            const closingChar = lastChar === '{' ? '}' : ']';
+            const extraIndent = needsClosure ? '  ' : '';
+            const closure = needsClosure ? '\n' + currentIndent + closingChar : '';
+            const insertion = '\n' + currentIndent + extraIndent + closure;
+            const before = value.substring(0, start);
+            const after = value.substring(mockResponseTextarea.selectionEnd);
+            mockResponseTextarea.value = before + insertion + after;
+            const newPos = before.length + 1 + currentIndent.length + extraIndent.length;
+            mockResponseTextarea.selectionStart = mockResponseTextarea.selectionEnd = newPos;
+            scheduleSaveDraft();
+            updateJsonHighlight();
         }
     }
 
@@ -420,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
             httpMethod.value = mockToEdit.method.toLowerCase();
             delay.value = mockToEdit.delay;
             mockResponseTextarea.value = mockToEdit.rawResponse;
+            updateJsonHighlight();
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;
             editMockIdInput.value = mockToEdit.id; //Save the ID in order to know we are editing an existing mock
@@ -830,4 +931,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('input', scheduleSaveDraft);
         el.addEventListener('change', scheduleSaveDraft);
     });
+
+    // JSON editor: indentation, highlighting, scroll sync
+    mockResponseTextarea.addEventListener('keydown', handleJsonIndentation);
+    mockResponseTextarea.addEventListener('input', updateJsonHighlight);
+    mockResponseTextarea.addEventListener('scroll', syncJsonHighlightScroll);
+    updateJsonHighlight();
 });
