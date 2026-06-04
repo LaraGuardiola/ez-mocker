@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadDraft = () => {
         chrome.storage.session.get('formDraft', (data) => {
             const draft = data.formDraft;
+            jsonError.style.display = 'none';
             if (!draft) return;
             if (draft.urlPattern) urlPatternInput.value = draft.urlPattern;
             if (draft.matchType) urlMatchTypeSelect.value = draft.matchType;
@@ -150,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             updateJsonHighlight();
+            parseJson();
         });
     }
 
@@ -579,6 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const populateTextAreaWithJson = () => {
         setTimeout(() => {
             mockResponseTextarea.value = json ? json : '';
+            jsonError.style.display = 'none';
+            updateJsonHighlight();
         }, 50) // Wait a bit to ensure the background script has time to respond
     }
 
