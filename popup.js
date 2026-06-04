@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
             urlPatternInput.value = '';
             mockResponseTextarea.value = '';
+            updateJsonHighlight();
             httpMethod.value = 'get';
             delay.value = '0'
             aliasInput.value = '';
@@ -406,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 mockResponseTextarea.value = JSON.stringify(parsedJson, null, 2);
                 jsonError.style.display = 'none';
                 updateJsonHighlight();
+            } else {
+                jsonError.style.display = 'none';
             }
         } catch (error) {
             jsonError.textContent = 'Invalid JSON syntax';
@@ -476,6 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!code) return;
         const text = mockResponseTextarea.value;
         code.innerHTML = text ? highlightJSON(text) : '';
+        if (text.length > 0) {
+            mockResponseTextarea.removeAttribute('placeholder');
+        } else {
+            mockResponseTextarea.setAttribute('placeholder', '{ "mock": "hello world" }');
+        }
     }
 
     const syncJsonHighlightScroll = () => {
@@ -523,6 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
             delay.value = mockToEdit.delay;
             mockResponseTextarea.value = mockToEdit.rawResponse;
             updateJsonHighlight();
+            scheduleSaveDraft();
             httpStatusCodeInput.value = mockToEdit.statusCode;
             aliasInput.value = mockToEdit.alias || null;
             editMockIdInput.value = mockToEdit.id; //Save the ID in order to know we are editing an existing mock
@@ -583,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mockResponseTextarea.value = json ? json : '';
             jsonError.style.display = 'none';
             updateJsonHighlight();
+            scheduleSaveDraft();
         }, 50) // Wait a bit to ensure the background script has time to respond
     }
 

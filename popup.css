@@ -590,10 +590,6 @@ input[type="checkbox"] {
     color: #999;
 }
 
-.json-editor-textarea:focus::placeholder {
-    color: transparent;
-}
-
 .json-editor-textarea:focus {
     outline: none;
 }
