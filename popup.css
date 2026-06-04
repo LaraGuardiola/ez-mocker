@@ -707,12 +707,12 @@ textarea {
 }
 
 #new-header-span {
-  font-size: 28px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   user-select: none;
   color: var(--text-secondary);
   transition: color 0.2s ease;
-  line-height: 1;
   margin-left: auto;
 }
 
@@ -777,13 +777,12 @@ textarea {
 }
 
 .rotated {
-  transform: rotate(45deg);
-  font-size: 28px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   user-select: none;
   color: var(--text-muted);
   transition: color 0.2s ease;
-  line-height: 1;
   margin-left: auto;
 }
 
