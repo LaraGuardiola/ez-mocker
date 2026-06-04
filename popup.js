@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const wholeMockResponse = [inputResponseBody, inputResponseHeaders];
     const popupTimer = 5000;
     let popupTimeoutId;
+    let draftTimeoutId;
 
     // Selectors for search functionality
     const ruleListSearchSelect = document.querySelector('.section-search #search-select');
@@ -88,6 +89,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const getHeadersList = () => {
+        const items = [...document.querySelectorAll('.header-list-item')];
+        return items.map(item => ({
+            key: item.querySelector('.header-list-item-key').value,
+            value: item.querySelector('.header-list-item-value').value,
+            checked: item.querySelector('.header-list-item-checkbox').checked
+        }));
+    }
+
+    const saveDraft = () => {
+        chrome.storage.session.set({
+            formDraft: {
+                urlPattern: urlPatternInput.value,
+                matchType: urlMatchTypeSelect.value,
+                method: httpMethod.value,
+                statusCode: httpStatusCodeInput.value,
+                delay: delay.value,
+                rawResponse: mockResponseTextarea.value,
+                alias: aliasInput.value,
+                headers: getHeadersList(),
+                editingId: editMockIdInput.value,
+                activeResponseTab: inputResponseBody.checked ? 'body' : 'headers'
+            }
+        });
+    }
+
+    const scheduleSaveDraft = () => {
+        clearTimeout(draftTimeoutId);
+        draftTimeoutId = setTimeout(saveDraft, 300);
+    }
+
+    const clearDraft = () => {
+        chrome.storage.session.remove('formDraft');
+    }
+
+    const loadDraft = () => {
+        chrome.storage.session.get('formDraft', (data) => {
+            const draft = data.formDraft;
+            if (!draft) return;
+            if (draft.urlPattern) urlPatternInput.value = draft.urlPattern;
+            if (draft.matchType) urlMatchTypeSelect.value = draft.matchType;
+            if (draft.method) httpMethod.value = draft.method;
+            if (draft.statusCode) httpStatusCodeInput.value = draft.statusCode;
+            if (draft.delay) delay.value = draft.delay;
+            if (draft.rawResponse) mockResponseTextarea.value = draft.rawResponse;
+            if (draft.alias) aliasInput.value = draft.alias;
+            if (draft.editingId) editMockIdInput.value = draft.editingId;
+            if (draft.activeResponseTab === 'headers') {
+                inputResponseHeaders.checked = true;
+                showHideResponseContainer();
+            }
+            if (draft.headers && draft.headers.length) {
+                draft.headers.forEach(h => addHeaderListItem(h.key, h.value));
+                const items = [...document.querySelectorAll('.header-list-item')];
+                items.forEach((item, i) => {
+                    if (draft.headers[i] !== undefined) {
+                        item.querySelector('.header-list-item-checkbox').checked = draft.headers[i].checked;
+                    }
+                });
+            }
+        });
+    }
+
     const clearForm = () => {
         if (urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
             urlPatternInput.value = '';
@@ -100,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editMockIdInput.value = '';
             jsonError.style.display = 'none';
             deleteAllLiHeaders();
+            clearDraft();
             urlPatternInput.focus();
         } else {
             return;
@@ -312,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         span.addEventListener('click', () => {
             li.remove();
+            scheduleSaveDraft();
         });
 
         li.appendChild(checkbox);
@@ -705,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadMocks();
+    loadDraft();
 
     // header
     tabLabelNewRule.addEventListener('click', clearForm);
@@ -723,8 +790,14 @@ document.addEventListener('DOMContentLoaded', () => {
     wholeMockResponse.forEach((input) => {
         input.addEventListener('click', showHideResponseContainer)
     });
-    newHeaderSpan.addEventListener('click', () => addHeaderListItem());
-    headersImg.addEventListener('click', () => deleteAllLiHeaders());
+    newHeaderSpan.addEventListener('click', () => {
+        addHeaderListItem();
+        scheduleSaveDraft();
+    });
+    headersImg.addEventListener('click', () => {
+        deleteAllLiHeaders();
+        scheduleSaveDraft();
+    });
     inputHeadersTopKey.addEventListener('change', () => toggleAllHeaderListItems());
 
     // Rule list section
@@ -750,4 +823,11 @@ document.addEventListener('DOMContentLoaded', () => {
     options[1].onmouseleave = () => optionIcons[1].src = "images/export-black.svg";
     options[0].addEventListener('click', importCollection);
     options[1].addEventListener('click', exportCollection);
+
+    // Auto-save draft on form changes
+    const formInputs = [urlPatternInput, urlMatchTypeSelect, httpMethod, httpStatusCodeInput, delay, mockResponseTextarea, aliasInput];
+    formInputs.forEach(el => {
+        el.addEventListener('input', scheduleSaveDraft);
+        el.addEventListener('change', scheduleSaveDraft);
+    });
 });
