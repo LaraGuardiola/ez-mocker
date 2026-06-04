@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupTimer = 5000;
   let popupTimeoutId;
   let draftTimeoutId;
+  const themeToggleInput = document.getElementById("theme-toggle-input");
 
   // Selectors for search functionality
   const ruleListSearchSelect = document.querySelector(
@@ -351,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
       infoDiv.classList.add("mock-info");
       infoDiv.innerHTML = `
           <strong>${mock.method} ${!mock.alias ? (mock.urlPattern.length > 70 ? mock.urlPattern.substring(0, 70) + "..." : mock.urlPattern) : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode} - Delay ${mock.delay}ms</small>
-          <pre style="font-size:0.8em; max-height: 100px; overflow:auto; background:#efefef; padding:3px;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
+          <pre style="font-size:0.8em; max-height: 60px; overflow:auto;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
         `;
 
       const actionsDiv = document.createElement("div");
@@ -691,6 +692,8 @@ document.addEventListener("DOMContentLoaded", () => {
       httpMethod.value = mockToEdit.method.toLowerCase();
       delay.value = mockToEdit.delay;
       mockResponseTextarea.value = mockToEdit.rawResponse;
+      jsonErrorPos = -1;
+      jsonError.style.display = "none";
       updateJsonHighlight();
       scheduleSaveDraft();
       httpStatusCodeInput.value = mockToEdit.statusCode;
@@ -762,6 +765,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const populateTextAreaWithJson = () => {
     setTimeout(() => {
       mockResponseTextarea.value = json ? json : "";
+      jsonErrorPos = -1;
       jsonError.style.display = "none";
       updateJsonHighlight();
       scheduleSaveDraft();
@@ -1162,4 +1166,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   mockResponseTextarea.addEventListener("scroll", syncJsonHighlightScroll);
   updateJsonHighlight();
+
+  // Theme toggle
+  const applyTheme = (isDark) => {
+    if (isDark) {
+      document.documentElement.setAttribute("data-theme", "dark");
+      themeToggleInput.checked = true;
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      themeToggleInput.checked = false;
+    }
+  };
+
+  chrome.storage.local.get("theme", (data) => {
+    applyTheme(data.theme === "dark");
+  });
+
+  themeToggleInput.addEventListener("change", () => {
+    const isDark = themeToggleInput.checked;
+    applyTheme(isDark);
+    chrome.storage.local.set({ theme: isDark ? "dark" : "light" });
+  });
 });
