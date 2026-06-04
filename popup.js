@@ -1085,6 +1085,13 @@ document.addEventListener("DOMContentLoaded", () => {
   tabLabels[1].onclick = () => showHideOptions("1520px");
   tabLabels[2].onclick = handleStartStopLabel;
   tabLabels[3].onclick = handleOptionsLabel;
+  const openTabBtn = document.getElementById("tab-label-open-tab");
+  if (openTabBtn) {
+    openTabBtn.addEventListener("click", () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL("standalone.html") });
+      window.close();
+    });
+  }
   headerPopup.addEventListener(
     "load",
     () => (headerPopup.style.display = "flex"),
