@@ -600,3 +600,11 @@ input[type="checkbox"] {
 .json-boolean { color: #0000ff; font-weight: 600; }
 .json-null { color: #800000; font-weight: 600; }
 .json-brace { color: #333; font-weight: 600; }
+
+.error-underline {
+    text-decoration: wavy underline red;
+    text-underline-offset: 2px;
+    background-color: rgba(255, 0, 0, 0.08);
+    border-radius: 2px;
+    padding: 0 1px;
+}
