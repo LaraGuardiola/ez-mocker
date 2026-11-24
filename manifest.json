@@ -4,10 +4,7 @@
   "author": "Sergio Lara Guardiola",
   "version": "0.1",
   "description": "Easily mock API responses in your browser.",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
+  "permissions": ["storage", "activeTab"],
   "action": {
     "default_title": "Activate EZ Mocker",
     "default_popup": "popup.html",
@@ -35,7 +32,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["/content-script/content-script-isolated.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     },
     {
       "matches": ["<all_urls>"],
@@ -46,7 +43,7 @@
       "matches": ["<all_urls>"],
       "js": ["/content-script/content-script-main.js"],
       "world": "MAIN",
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ]
 }

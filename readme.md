@@ -37,7 +37,7 @@ Ez and sexy. 3 main buttons, 2 sections:
   - **Status code**
   - **Alias**
 
-- 💀 Easily import and export your rules as a JSON collection
+- 💀 Easily import and export your rules as JSON, all at once or one collection at a time
 - 🧩 Built without any library dependencies, just loads of caffeine
 - ⚡ Ultra lightweight — just **100KB**
 - 🧠 FREE! Your limit is chrome storage and the power of will, I'm not even sure what's the actual limit

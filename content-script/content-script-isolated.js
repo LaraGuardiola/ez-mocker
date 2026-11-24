@@ -1,6 +1,7 @@
 console.log("ISOLATED: Content script loaded in the isolated world");
 
 let activeMocks = [];
+let mocksLoaded = false;
 
 // Send mocks to main world
 function sendMocksToMainWorld() {
@@ -18,6 +19,7 @@ function loadMocksFromStorage() {
             activeMocks = [];
             console.log("ISOLATED: There are no rules / mocks stored in chrome.storage.local.");
         }
+        mocksLoaded = true;
         sendMocksToMainWorld();
     });
 }
@@ -42,6 +44,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
-loadMocksFromStorage();
+// Storage is the source of truth: any change (popup, standalone tab, import...)
+// reaches every open tab, not only the active one
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local" || !changes.mocks) return;
 
-window.postMessage({ type: "FROM_ISOLATED_TO_MAIN", payload: activeMocks }, "*");
+    const mocks = changes.mocks.newValue;
+    activeMocks = Array.isArray(mocks) ? mocks.filter(m => m.isActive) : [];
+    console.log("ISOLATED: Rules / mocks changed in storage:", activeMocks);
+    sendMocksToMainWorld();
+});
+
+// The main world may start listening after our first message: resend when it asks.
+// Before storage is loaded we stay quiet, an empty list would be taken as "no mocks"
+window.addEventListener("message", (event) => {
+    if (event.source !== window || event.data?.type !== "MAIN_READY") return;
+    if (mocksLoaded) sendMocksToMainWorld();
+});
+
+loadMocksFromStorage();

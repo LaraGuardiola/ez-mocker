@@ -12,19 +12,40 @@
     <header class="header">
         <div class="header-labels">
             <div class="header-labels-wrapper">
-                <label title="New rule" for="tab1" class="tab-label" id="tab-label-1">+</label>
+                <label title="New rule" for="tab1" class="tab-label" id="tab-label-1">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+    </svg>
+</label>
                 <label title="Rule list" for="tab2" class="tab-label" id="tab-label-2">
                     <img src="images/rules.svg" alt="" srcset="">
                 </label>
-                <label title="Start / Stop" for="tab3" class="tab-label" id="tab-label-3">
+                <label title="Start / Stop" class="tab-label" id="tab-label-3">
                     <img src="images/active.svg" alt="" srcset="" id="start-stop">
                 </label>
             </div>
             <div class="header-popup"></div>
             <label for="" class="tab-label" id="tab-label-options"><img src="/images/options.svg" alt=""></label>
+            <label title="Open in Tab" class="tab-label" id="tab-label-open-tab">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+            </label>
         </div>
         
     </header>
+    <div class="options-container hidden">
+        <div title="Import rules from a JSON file" class="option">
+            <label title="Import rules from a JSON file" for=""><img class="option-icon" src="images/import-black.svg" alt=""></label>
+            <label for="">Import</label>
+        </div>
+        <div title="Export all rules as JSON" class="option">
+            <label title="Export all rules as JSON" for=""><img class="option-icon" src="images/export-black.svg" alt=""></label>
+            <label for="">Export</label>
+        </div>
+    </div>
     <div class="container">
         <div class="container-wrapper">
 
@@ -64,26 +85,34 @@
                         </select>
                     </div>
     
-                    <div class="form-input">
+                    <div class="form-input form-input-compact">
                         <label for="http-status-code">HTTP Code</label>
-                        <input type="number" id="http-status-code" value="200" min="100" max="599" maxlength="3">
+                        <input type="number" id="http-status-code" value="200" min="200" max="599" maxlength="3">
                     </div>
 
-                    <div class="form-input">
+                    <div class="form-input form-input-compact">
                         <label title="In ms. Only available for fetch requests" for="delay">Delay*</label>
                         <input type="number" id="delay" value="0" min="0"  maxlength="9" step="1000">
                     </div>
     
-                    <div class="form-input">
+                    <div class="form-input form-input-wide">
                         <label title="Not required" for="alias">Alias*</label>
                         <input type="text" id="alias" placeholder="/api/test">
+                    </div>
+
+                    <div class="form-input form-input-wide">
+                        <label title="Not required. Type to search or create one" for="collection">Collection*</label>
+                        <div class="combobox">
+                            <input type="text" id="collection" placeholder="checkout-flow" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="collection-list" aria-expanded="false">
+                            <ul class="combobox-list" id="collection-list" role="listbox" hidden></ul>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Inputs for switching between tabs -->
                 <form action="">
-                    <input class="tab-input" type="radio" id="tab3" name="tabs" checked>
-                    <input class="tab-input" type="radio" id="tab4" name="tabs">
+                    <input class="tab-input" type="radio" id="tab3" name="response-tabs" checked>
+                    <input class="tab-input" type="radio" id="tab4" name="response-tabs">
                     <div class="response-container-header">
                         <label id="response-body-label" for="tab3">RESPONSE BODY</label>
                         <label id="response-headers-label" for="tab4">RESPONSE HEADERS</label>
@@ -92,8 +121,11 @@
                     <div class="response-container">
                         <div class="response-container-wrapper">
                             <section class="response-slide response-body">
-                                <div class="form-group json" >                     
-                                    <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }' spellcheck="false"></textarea>
+                                <div class="form-group json">
+                                    <div class="json-editor-wrapper">
+                                        <pre class="json-editor-overlay" aria-hidden="true"><code id="json-highlight"></code></pre>
+                                        <textarea id="mock-response" rows="10" placeholder='{ "mock": "hello world" }' spellcheck="false" class="json-editor-textarea"></textarea>
+                                    </div>
                                     <small id="json-error" class="error-message" style="display:none;">Invalid JSON syntax</small>
                                 </div>
                             </section>
@@ -104,7 +136,7 @@
                                         <input type="checkbox" name="" id="input-headers-top-key" checked="true" title="Disable all headers">
                                         <span id="key-span"><strong>Key</strong></span>
                                         <span id="value-span"><strong>Value</strong></span>
-                                        <span id="new-header-span" title="Create new header">+</span>
+                                        <span id="new-header-span" title="Create new header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V20M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
                                         <img id="header-trash" src="images/trash.svg" alt="" title="Remove all headers">
                                     </section>
                                     <section class="headers-main">
@@ -123,8 +155,27 @@
                 
 
                 <div class="bottom-action">
-                    <input type="hidden" id="random-json-id"> <button id="random-json">Random json</button>
-                    <input type="hidden" id="edit-mock-id"> <button id="save-mock">Save rule</button>
+                    <label class="theme-toggle" title="Toggle dark mode">
+                        <input type="checkbox" id="theme-toggle-input">
+                        <span class="toggle-track">
+                            <span class="toggle-icon sun">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"/>
+                                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                                </svg>
+                            </span>
+                            <span class="toggle-knob"></span>
+                            <span class="toggle-icon moon">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                </svg>
+                            </span>
+                        </span>
+                    </label>
+                    <div class="bottom-actions-right">
+                        <input type="hidden" id="random-json-id"> <button id="random-json">Random json</button>
+                        <input type="hidden" id="edit-mock-id"> <button id="save-mock">Save rule</button>
+                    </div>
                 </div>
             </section>
     
@@ -134,15 +185,19 @@
                     <div class="rule-list-header">
                         <div class="section-title">
                             <h2>Rule list</h2>
+                            <small id="rule-search-count"></small>
                         </div>
                         <div class="section-search">
                             <small style="color: #555;">FILTER BY</small>
                             <select name="" id="search-select">
                                 <option value="all">ALL</option>
                                 <option value="method">METHOD</option>
-                                <option value="alias">ALIAS</option>
                                 <option value="httpCode">HTTP CODE</option>
+                                <option value="collection">COLLECTION</option>
                             </select>
+                            <select id="search-select-collection" style="display: none;"></select>
+                            <button type="button" id="collection-toggle" class="collection-action" style="display: none;"></button>
+                            <button type="button" id="collection-export" class="collection-action" style="display: none;" title="Export this collection as JSON">Export</button>
                             <select id="search-select-method" style="display: none;">
                                 <option value="get">GET</option>
                                 <option value="post">POST</option>
@@ -155,6 +210,18 @@
                                 <option value="connect">CONNECT</option>
                             </select>
                             <input type="text" class="search-input">
+                            <div class="rule-search">
+                                <svg class="rule-search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="7"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" id="rule-search-input" placeholder="Search by alias or URL..." autocomplete="off" spellcheck="false">
+                                <button type="button" id="rule-search-clear" title="Clear search" hidden>
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                        <path d="M18 6L6 18M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -162,16 +229,6 @@
                     </ul>
                 </div>
             </section>
-            <div class="options-container hidden">
-                <div title="Import collection in JSON format" class="option">
-                    <label title="Import collection in JSON format" for=""><img class="option-icon" src="images/import-black.svg" alt=""></label>
-                    <label for="">Import</label>
-                </div>
-                <div title="Export collection in JSON format" class="option">
-                    <label title="Export collection in JSON format" for=""><img class="option-icon" src="images/export-black.svg" alt=""></label>
-                    <label for="">Export</label>
-                </div>
-            </div>
         </div>
         
     </div>
