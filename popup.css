@@ -312,9 +312,60 @@ h2 {
     flex: 0 0 120px;
 }
 
-.form-input:nth-child(4) {
-    width: auto;
-    flex: 0 0 160px;
+.three-column .form-input.form-input-compact {
+    flex: 0 0 96px;
+}
+
+.three-column .form-input.form-input-wide {
+    flex: 1 1 0;
+}
+
+/* ---- Combobox (collection) ---- */
+
+.combobox {
+    position: relative;
+}
+
+.combobox-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 180px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 4px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.combobox-list[hidden] {
+    display: none;
+}
+
+.combobox-option {
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.combobox-option.active,
+.combobox-option:hover {
+    background-color: var(--accent);
+    color: #ffffff;
+}
+
+.combobox-option-new {
+    font-style: italic;
+    color: var(--text-secondary);
 }
 
 input[type="text"],
@@ -395,6 +446,15 @@ button:active {
     margin-left: 0.5em;
 }
 
+#save-mock:disabled,
+#save-mock:disabled:hover {
+    background-color: var(--accent);
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
 #random-json {
     background-color: var(--text-secondary);
 }
@@ -409,10 +469,7 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 0.4em;
-    padding-top: 0.8em;
-    border-top: 1px solid var(--border);
-    transition: border-color 0.3s ease;
+    margin-top: 0.8em;
 }
 
 .bottom-actions-right {
@@ -623,6 +680,22 @@ textarea {
     color: #e03e3e;
     font-size: 0.85em;
     font-weight: 500;
+}
+
+/* Floats over the editor so it never pushes the layout */
+.form-group.json {
+    position: relative;
+}
+
+#json-error {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    z-index: 3;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-tertiary);
+    pointer-events: none;
 }
 
 /* ---- Response Container ---- */
@@ -875,8 +948,69 @@ input[type="checkbox"] {
     transition: background-color 0.3s ease;
 }
 
+.section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+}
+
 .section-title h2 {
     margin-bottom: 0.4em;
+}
+
+#rule-search-count {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.rule-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    margin-left: auto;
+}
+
+.rule-search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.rule-search > input[type="text"] {
+    height: 30px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+#rule-search-clear {
+    position: absolute;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#rule-search-clear[hidden] {
+    display: none;
+}
+
+#rule-search-clear:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    box-shadow: none;
 }
 
 .section-search {
@@ -889,6 +1023,47 @@ input[type="checkbox"] {
     width: 100px;
     font-size: 12px;
     margin-left: 0;
+}
+
+.section-search > #search-select {
+    width: 120px;
+}
+
+.section-search > #search-select-collection {
+    width: 160px;
+}
+
+.section-search > .collection-action {
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.section-search > #collection-toggle {
+    background-color: #28a745;
+}
+
+.section-search > #collection-toggle:hover {
+    background-color: #218838;
+}
+
+.section-search > #collection-toggle.turn-off {
+    background-color: #ffc107;
+    color: #1a1a2e;
+}
+
+.section-search > #collection-toggle.turn-off:hover {
+    background-color: #e0a800;
+}
+
+.section-search > #collection-export {
+    background-color: var(--text-secondary);
+}
+
+.section-search > #collection-export:hover {
+    background-color: var(--text-primary);
 }
 
 .section-search > input {
@@ -929,6 +1104,15 @@ input[type="checkbox"] {
     transition: all 0.2s ease;
 }
 
+#mocks-list li.mocks-list-empty {
+    justify-content: center;
+    min-height: 80px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    box-shadow: none;
+    border-style: dashed;
+}
+
 #mocks-list li:hover {
     box-shadow: var(--shadow-md);
 }
@@ -943,6 +1127,21 @@ input[type="checkbox"] {
     color: var(--text-primary);
     font-size: 14px;
     transition: color 0.3s ease;
+}
+
+#mocks-list li .mock-info .collection-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    margin-left: 6px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: text-bottom;
 }
 
 #mocks-list li .mock-info small {
@@ -974,14 +1173,14 @@ input[type="checkbox"] {
     flex-direction: column;
     gap: 4px;
     padding-top: 0;
-    min-width: 50px;
+    min-width: 64px;
 }
 
 #mocks-list li .actions button {
     font-size: 0.75em;
     padding: 4px 8px;
     margin-left: 0;
-    width: 48px;
+    width: 64px;
     border-radius: var(--radius-sm);
 }
 
@@ -1002,6 +1201,29 @@ input[type="checkbox"] {
     background-color: #ec971f;
 }
 
+#mocks-list li .actions .duplicate-btn {
+    background-color: #17a2b8;
+}
+
+#mocks-list li .actions .duplicate-btn:hover {
+    background-color: #138496;
+}
+
+#mocks-list li.just-duplicated {
+    animation: duplicate-flash 1.2s ease;
+}
+
+@keyframes duplicate-flash {
+    0%,
+    40% {
+        border-color: #17a2b8;
+        box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.35);
+    }
+    100% {
+        box-shadow: var(--shadow-sm);
+    }
+}
+
 #mocks-list li .actions .delete-btn {
     background-color: #dc3545;
 }
@@ -1012,10 +1234,11 @@ input[type="checkbox"] {
 
 /* ---- Options Container ---- */
 
+/* Lives outside .container: its transform would make "fixed" relative to the slider */
 .options-container {
     position: fixed;
-    top: 4px;
-    left: 720px;
+    top: 53px;
+    right: 0;
     display: flex;
     flex-direction: column;
     width: 80px;
@@ -1108,6 +1331,52 @@ img {
    Tab Mode (Standalone Page) Overrides
    ======================================== */
 
+/* ---- Popup fixed height (not standalone) ---- */
+
+/* The 200% wide slider must not create a horizontal scrollbar.
+   html is clipped too, so body becomes the clipping box itself
+   instead of relying on overflow propagation to the viewport */
+html {
+    overflow: hidden;
+}
+
+body:not(.tab-mode) {
+    overflow-x: hidden;
+}
+
+/* Same box for body / headers */
+body:not(.tab-mode) .response-container {
+    height: 270px;
+}
+
+body:not(.tab-mode) .form-group.json {
+    margin-bottom: 0;
+}
+
+body:not(.tab-mode) .json-editor-textarea {
+    display: block;
+    margin-bottom: 0;
+}
+
+body:not(.tab-mode) .response-headers {
+    margin-bottom: 0;
+}
+
+/* Both slides share the same fixed height, the rule list scrolls inside */
+body:not(.tab-mode) .container {
+    height: 506px;
+}
+
+body:not(.tab-mode) .slide.rule-list {
+    min-height: 0;
+}
+
+body:not(.tab-mode) .rule-list-wrapper {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+}
+
 body.tab-mode {
     width: 100vw;
     max-width: 100vw;
@@ -1143,7 +1412,7 @@ body.tab-mode {
 .tab-mode .response-slide {
     flex: 1;
     flex-direction: column;
-    max-height: 390px;
+    min-height: 0;
 }
 
 .tab-mode .response-body,
@@ -1156,6 +1425,11 @@ body.tab-mode {
     flex: 1;
     display: flex;
     flex-direction: column;
+    margin-bottom: 0;
+}
+
+.tab-mode .json-editor-textarea {
+    margin-bottom: 0;
 }
 
 .tab-mode .json-editor-wrapper {
@@ -1199,7 +1473,5 @@ body.tab-mode {
 }
 
 .tab-mode .options-container {
-    position: fixed;
-    left: auto !important;
     right: 20px;
 }

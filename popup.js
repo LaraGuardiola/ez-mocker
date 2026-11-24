@@ -12,13 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const httpStatusCodeInput = document.getElementById("http-status-code");
   const editMockIdInput = document.getElementById("edit-mock-id");
   const tabLabelNewRule = document.querySelector("#tab-label-1");
+  const tabLabelNewRuleInput = document.getElementById("tab1");
   const tabLabelStartStop = document.querySelector("#tab-label-3");
   const optionsContainer = document.querySelector(".options-container");
   const tabLabels = [...document.querySelectorAll(".tab-label")];
-  const tabInputs = [...document.querySelectorAll(".tab-input")];
   const options = [...document.querySelectorAll(".option")];
   const optionIcons = [...document.querySelectorAll(".option-icon")];
   const aliasInput = document.querySelector("#alias");
+  const collectionInput = document.getElementById("collection");
+  const collectionList = document.getElementById("collection-list");
   const startStopImg = document.querySelector("#start-stop");
   const headerPopup = document.querySelector(".header-popup");
   const responseBody = document.querySelector(".response-body");
@@ -33,6 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let popupTimeoutId;
   let draftTimeoutId;
   const themeToggleInput = document.getElementById("theme-toggle-input");
+  const isStandalone = document.body.classList.contains("tab-mode");
+  const collectionToggleButton = document.getElementById("collection-toggle");
+  const collectionExportButton = document.getElementById("collection-export");
 
   // Selectors for search functionality
   const ruleListSearchSelect = document.querySelector(
@@ -44,6 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const ruleListSearchInput = document.querySelector(
     ".section-search .search-input",
   );
+  const ruleListSearchSelectCollection = document.querySelector(
+    ".section-search #search-select-collection",
+  );
+  const ruleSearchNameInput = document.getElementById("rule-search-input");
+  const ruleSearchClearButton = document.getElementById("rule-search-clear");
+  const ruleSearchCount = document.getElementById("rule-search-count");
 
   const httpColorList = {
     get: "#4CAF50",
@@ -75,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "regex",
   ];
 
-  const collectionRequiredFields = [
+  const ruleRequiredFields = [
     "alias",
     "id",
     "isActive",
@@ -90,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let mocks = [];
   let previousMockStates = [];
+  let collectionActiveIndex = -1;
   let json = null;
   let areRulesActive = null;
   let jsonErrorPos = -1;
@@ -132,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         delay: delay.value,
         rawResponse: mockResponseTextarea.value,
         alias: aliasInput.value,
+        collection: collectionInput.value,
         headers: getHeadersList(),
         editingId: editMockIdInput.value,
         activeResponseTab: inputResponseBody.checked ? "body" : "headers",
@@ -160,6 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (draft.delay) delay.value = draft.delay;
       if (draft.rawResponse) mockResponseTextarea.value = draft.rawResponse;
       if (draft.alias) aliasInput.value = draft.alias;
+      if (draft.collection) collectionInput.value = draft.collection;
       if (draft.editingId) editMockIdInput.value = draft.editingId;
       if (draft.activeResponseTab === "headers") {
         inputResponseHeaders.checked = true;
@@ -181,13 +195,18 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const clearForm = () => {
-    if (urlPatternInput.value !== "" || mockResponseTextarea.value !== "") {
+    if (
+      urlPatternInput.value !== "" ||
+      mockResponseTextarea.value !== "" ||
+      collectionInput.value !== ""
+    ) {
       urlPatternInput.value = "";
       mockResponseTextarea.value = "";
       updateJsonHighlight();
       httpMethod.value = "get";
       delay.value = "0";
       aliasInput.value = "";
+      collectionInput.value = "";
       httpStatusCodeInput.value = "200";
       urlMatchTypeSelect.value = "contains";
       editMockIdInput.value = "";
@@ -212,12 +231,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const showHideOptions = (position) => {
-    if (optionsContainer.classList.contains("hidden")) {
-      toggleOptionsVisibility();
-    }
-    optionsContainer.style.left = position;
-    toggleOptionsVisibility();
+  const hideOptions = () => {
+    optionsContainer.classList.add("hidden");
   };
 
   const showHideResponseContainer = () => {
@@ -251,11 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const handleOptionsLabel = () => {
-    if (tabInputs[0].checked) {
-      optionsContainer.style.left = "720px";
-    } else {
-      optionsContainer.style.left = "1520px";
-    }
     toggleOptionsVisibility();
   };
 
@@ -311,36 +321,109 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterBy = ruleListSearchSelect.value;
     const searchTerm = ruleListSearchInput.value.trim();
     const searchMethod = ruleListSearchSelectMethod.value.toLowerCase().trim();
+    const nameTerm = ruleSearchNameInput.value.trim().toLowerCase();
 
-    if (filterBy === "all") {
-      filteredMocks = mocks;
-    } else if (filterBy === "method") {
-      filteredMocks = mocks.filter(
+    if (nameTerm) {
+      filteredMocks = filteredMocks.filter((mock) => {
+        const alias = (mock.alias || "").toLowerCase();
+        const urlPattern = (mock.urlPattern || "").toLowerCase();
+        return alias.includes(nameTerm) || urlPattern.includes(nameTerm);
+      });
+    }
+
+    if (filterBy === "method") {
+      filteredMocks = filteredMocks.filter(
         (mock) => mock.method.toLowerCase() === searchMethod,
       );
-    } else if (filterBy === "alias") {
-      filteredMocks = mocks.filter((mock) => {
-        const alias = mock.alias;
-        const urlPattern = mock.urlPattern;
-
-        return (
-          (alias.includes(searchTerm) && searchTerm.length > 0) ||
-          (urlPattern.includes(searchTerm) && searchTerm.length > 0)
-        );
-      });
     } else if (filterBy === "httpCode") {
-      filteredMocks = mocks.filter(
+      filteredMocks = filteredMocks.filter(
         (mock) => mock.statusCode.toString() === searchTerm,
+      );
+    } else if (filterBy === "collection") {
+      filteredMocks = filteredMocks.filter(
+        (mock) => mock.collection === ruleListSearchSelectCollection.value,
       );
     }
 
     return filteredMocks;
   };
 
+  // Collections only exist through the rules using them: no rules, no collection
+  const getCollections = () =>
+    [...new Set(mocks.map((mock) => mock.collection).filter(Boolean))].sort(
+      (a, b) => a.localeCompare(b),
+    );
+
+  const findCollection = (name) =>
+    getCollections().find((c) => c.toLowerCase() === name.toLowerCase());
+
+  const getSelectedCollectionRules = () =>
+    mocks.filter(
+      (mock) => mock.collection === ruleListSearchSelectCollection.value,
+    );
+
+  const updateCollectionActions = () => {
+    const rules = getSelectedCollectionRules();
+    const isVisible =
+      ruleListSearchSelect.value === "collection" && rules.length > 0;
+    collectionToggleButton.style.display = isVisible ? "inline-block" : "none";
+    collectionExportButton.style.display = isVisible ? "inline-block" : "none";
+    if (!isVisible) return;
+
+    const anyActive = rules.some((mock) => mock.isActive);
+    collectionToggleButton.textContent = anyActive ? "All off" : "All on";
+    collectionToggleButton.classList.toggle("turn-off", anyActive);
+    const action = anyActive ? "Disable" : "Enable";
+    collectionToggleButton.title =
+      `${action} every rule in ${ruleListSearchSelectCollection.value}`;
+  };
+
+  const renderCollectionFilterOptions = () => {
+    const collections = getCollections();
+    const selected = ruleListSearchSelectCollection.value;
+    ruleListSearchSelectCollection.innerHTML = "";
+
+    if (collections.length === 0) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "NO COLLECTIONS";
+      ruleListSearchSelectCollection.appendChild(option);
+      return;
+    }
+
+    collections.forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      ruleListSearchSelectCollection.appendChild(option);
+    });
+    ruleListSearchSelectCollection.value = collections.includes(selected)
+      ? selected
+      : collections[0];
+  };
+
   const renderMocksList = () => {
     mocksListUl.innerHTML = "";
 
+    renderCollectionFilterOptions();
+    updateCollectionActions();
     const filteredMocks = setFilteredMocks();
+    const isFiltering =
+      filteredMocks.length !== mocks.length ||
+      ruleSearchNameInput.value.trim() !== "";
+
+    ruleSearchClearButton.hidden = ruleSearchNameInput.value === "";
+    ruleSearchCount.textContent = isFiltering
+      ? `${filteredMocks.length} / ${mocks.length}`
+      : `${mocks.length}`;
+
+    if (filteredMocks.length === 0 && mocks.length > 0) {
+      const emptyItem = document.createElement("li");
+      emptyItem.classList.add("mocks-list-empty");
+      emptyItem.textContent = "No rules match your search";
+      mocksListUl.appendChild(emptyItem);
+      return;
+    }
 
     filteredMocks.forEach((mock) => {
       const listItem = document.createElement("li");
@@ -354,6 +437,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <strong>${mock.method} ${!mock.alias ? (mock.urlPattern.length > 70 ? mock.urlPattern.substring(0, 70) + "..." : mock.urlPattern) : mock.alias}</strong> <small>(${mock.matchType}) - HTTP ${mock.statusCode} - Delay ${mock.delay}ms</small>
           <pre style="font-size:0.8em; max-height: 60px; overflow:auto;">${mock.rawResponse.substring(0, 300)}${mock.rawResponse.length > 500 ? "..." : ""}</pre>
         `;
+
+      if (mock.collection) {
+        const collectionBadge = document.createElement("span");
+        collectionBadge.classList.add("collection-badge");
+        collectionBadge.textContent = mock.collection;
+        collectionBadge.title = "Collection";
+        infoDiv.querySelector("strong").after(collectionBadge);
+      }
 
       const actionsDiv = document.createElement("div");
       actionsDiv.classList.add("actions");
@@ -374,6 +465,11 @@ document.addEventListener("DOMContentLoaded", () => {
       editButton.classList.add("edit-btn");
       editButton.addEventListener("click", () => populateFormForEdit(mock.id));
 
+      const duplicateButton = document.createElement("button");
+      duplicateButton.textContent = "Duplicate";
+      duplicateButton.classList.add("duplicate-btn");
+      duplicateButton.addEventListener("click", () => duplicateMock(mock.id));
+
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "Delete";
       deleteButton.classList.add("delete-btn");
@@ -381,6 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       actionsDiv.appendChild(toggleButton);
       actionsDiv.appendChild(editButton);
+      actionsDiv.appendChild(duplicateButton);
       actionsDiv.appendChild(deleteButton);
 
       listItem.appendChild(infoDiv);
@@ -644,6 +741,18 @@ document.addEventListener("DOMContentLoaded", () => {
         '{ "mock": "hello world" }',
       );
     }
+    // Every response change (typed or programmatic) ends up here
+    updateSaveButtonState();
+  };
+
+  const updateSaveButtonState = () => {
+    const isFormFilled =
+      urlPatternInput.value.trim() !== "" &&
+      mockResponseTextarea.value.trim() !== "";
+    saveMockButton.disabled = !isFormFilled;
+    saveMockButton.title = isFormFilled
+      ? ""
+      : "URL and response body are required";
   };
 
   const syncJsonHighlightScroll = () => {
@@ -698,6 +807,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scheduleSaveDraft();
       httpStatusCodeInput.value = mockToEdit.statusCode;
       aliasInput.value = mockToEdit.alias || null;
+      collectionInput.value = mockToEdit.collection || "";
       editMockIdInput.value = mockToEdit.id; //Save the ID in order to know we are editing an existing mock
       Object.entries(mockToEdit.headers).forEach(([key, value]) => {
         addHeaderListItem(key, value);
@@ -715,6 +825,57 @@ document.addEventListener("DOMContentLoaded", () => {
       notifyBackgroundScriptForRules();
     }
     showHideStartStop();
+  };
+
+  const toggleSelectedCollection = async () => {
+    const name = ruleListSearchSelectCollection.value;
+    const rules = getSelectedCollectionRules();
+    if (rules.length === 0) return;
+
+    const isActive = !rules.some((mock) => mock.isActive);
+    rules.forEach((mock) => (mock.isActive = isActive));
+
+    await saveMocksToStorage();
+    renderMocksList();
+    notifyBackgroundScriptForRules();
+    showHideStartStop();
+    renderPopup(`Collection ${name} ${isActive ? "enabled" : "disabled"}`);
+  };
+
+  const duplicateMock = async (id) => {
+    const mockIndex = mocks.findIndex((m) => m.id === id);
+    if (mockIndex === -1) return;
+
+    const original = mocks[mockIndex];
+    // Matching picks the first active mock, so the copy starts disabled
+    // to avoid silently shadowing (or being shadowed by) the original
+    const copy = {
+      ...structuredClone(original),
+      id: Date.now(),
+      alias: original.alias ? `${original.alias} (copy)` : original.alias,
+      isActive: false,
+    };
+
+    mocks.splice(mockIndex + 1, 0, copy);
+    // Keep Start/Stop saved states aligned with mocks indexes
+    if (previousMockStates.length > 0) {
+      previousMockStates.splice(mockIndex + 1, 0, false);
+    }
+
+    await saveMocksToStorage();
+    renderMocksList();
+    notifyBackgroundScriptForRules();
+    showHideStartStop();
+
+    const copyItem = mocksListUl.querySelector(`li[data-id="${copy.id}"]`);
+    if (copyItem) {
+      copyItem.classList.add("just-duplicated");
+      copyItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    renderPopup(
+      `Rule ${original.method} ${original.alias ? original.alias : original.urlPattern.length > 20 ? original.urlPattern.substring(0, 20) + "..." : original.urlPattern} has been duplicated`,
+    );
   };
 
   const deleteMock = async (id) => {
@@ -781,6 +942,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const responseStr = mockResponseTextarea.value.trim();
     const statusCode = parseInt(httpStatusCodeInput.value) || 200;
     const alias = aliasInput.value.trim();
+    const collectionName = collectionInput.value.trim();
+    // Reuse an existing collection when only the casing differs
+    const collection = collectionName
+      ? findCollection(collectionName) || collectionName
+      : null;
     const editingId = editMockIdInput.value
       ? parseInt(editMockIdInput.value)
       : null;
@@ -813,6 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rawResponse: responseStr,
         statusCode,
         alias: alias ?? null,
+        collection,
         isActive: true,
         headers,
       };
@@ -832,6 +999,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rawResponse: responseStr,
         statusCode,
         alias: alias ?? null,
+        collection,
         headers,
       };
     }
@@ -840,6 +1008,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMocksList();
     notifyBackgroundScriptForRules();
     clearForm();
+    // Keep the collection: rules of the same flow are usually created in a row
+    collectionInput.value = collection || "";
+    scheduleSaveDraft();
     showHideStartStop();
     isNewSave
       ? renderPopup("Rule saved")
@@ -849,22 +1020,92 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const showHideSearchInput = () => {
-    if (ruleListSearchSelect.value === "all") {
-      ruleListSearchInput.style.display = "none";
-      ruleListSearchSelectMethod.style.display = "none";
-    } else if (ruleListSearchSelect.value === "httpCode") {
+    const filterBy = ruleListSearchSelect.value;
+    ruleListSearchInput.style.display = "none";
+    ruleListSearchSelectMethod.style.display = "none";
+    ruleListSearchSelectCollection.style.display = "none";
+
+    if (filterBy === "httpCode") {
       ruleListSearchInput.type = "number";
       ruleListSearchInput.value = "200";
       ruleListSearchInput.style.display = "inline-block";
-      ruleListSearchSelectMethod.style.display = "none";
-    } else if (ruleListSearchSelect.value === "method") {
-      ruleListSearchInput.style.display = "none";
+    } else if (filterBy === "method") {
       ruleListSearchSelectMethod.style.display = "inline-block";
-    } else if (ruleListSearchSelect.value === "alias") {
-      ruleListSearchInput.type = "text";
-      ruleListSearchInput.value = "";
-      ruleListSearchInput.style.display = "inline-block";
-      ruleListSearchSelectMethod.style.display = "none";
+    } else if (filterBy === "collection") {
+      ruleListSearchSelectCollection.style.display = "inline-block";
+    }
+  };
+
+  const closeCollectionList = () => {
+    collectionList.hidden = true;
+    collectionActiveIndex = -1;
+    collectionInput.setAttribute("aria-expanded", "false");
+  };
+
+  const renderCollectionOptions = () => {
+    const term = collectionInput.value.trim();
+    const lowerTerm = term.toLowerCase();
+    const collections = getCollections();
+    const options = collections
+      .filter((name) => name.toLowerCase().includes(lowerTerm))
+      .map((name) => ({ name, label: name, isNew: false }));
+
+    if (term && !findCollection(term)) {
+      options.push({ name: term, label: `Create "${term}"`, isNew: true });
+    }
+
+    collectionList.innerHTML = "";
+    collectionActiveIndex = -1;
+
+    options.forEach(({ name, label, isNew }) => {
+      const li = document.createElement("li");
+      li.classList.add("combobox-option");
+      if (isNew) li.classList.add("combobox-option-new");
+      li.setAttribute("role", "option");
+      li.textContent = label;
+      li.title = label;
+      // mousedown fires before the input blur, click would be too late
+      li.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        selectCollection(name);
+      });
+      collectionList.appendChild(li);
+    });
+
+    collectionList.hidden = options.length === 0;
+    collectionInput.setAttribute("aria-expanded", String(!collectionList.hidden));
+  };
+
+  const selectCollection = (name) => {
+    collectionInput.value = name;
+    closeCollectionList();
+    scheduleSaveDraft();
+  };
+
+  const moveCollectionActive = (step) => {
+    const items = [...collectionList.children];
+    if (items.length === 0) return;
+    collectionActiveIndex =
+      (collectionActiveIndex + step + items.length) % items.length;
+    items.forEach((item, index) =>
+      item.classList.toggle("active", index === collectionActiveIndex),
+    );
+    items[collectionActiveIndex].scrollIntoView({ block: "nearest" });
+  };
+
+  const handleCollectionKeydown = (event) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (collectionList.hidden) renderCollectionOptions();
+      moveCollectionActive(event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Enter" && collectionActiveIndex > -1) {
+      event.preventDefault();
+      collectionList.children[collectionActiveIndex].dispatchEvent(
+        new MouseEvent("mousedown"),
+      );
+    } else if (event.key === "Escape" && !collectionList.hidden) {
+      event.preventDefault();
+      closeCollectionList();
     }
   };
 
@@ -872,19 +1113,32 @@ document.addEventListener("DOMContentLoaded", () => {
     optionsContainer.classList.toggle("hidden");
   };
 
-  const exportCollection = () => {
-    const jsonString = JSON.stringify(mocks, null, 2);
+  const downloadRules = (rules, fileName) => {
+    const jsonString = JSON.stringify(rules, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = "my-collection" + ".json";
+    link.download = `${fileName}.json`;
     link.click();
 
     URL.revokeObjectURL(url);
+  };
+
+  const exportRules = () => {
+    downloadRules(mocks, "ez-mocker-rules");
     toggleOptionsVisibility();
-    renderPopup("Exported JSON collection");
+    renderPopup(`Exported ${mocks.length} rules`);
+  };
+
+  const exportSelectedCollection = () => {
+    const name = ruleListSearchSelectCollection.value;
+    const rules = mocks.filter((mock) => mock.collection === name);
+    if (rules.length === 0) return;
+    const fileName = name.replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "");
+    downloadRules(rules, `ez-mocker-${fileName || "collection"}`);
+    renderPopup(`Exported collection ${name} (${rules.length} rules)`);
   };
 
   const handleJson = (event) => {
@@ -910,11 +1164,11 @@ document.addEventListener("DOMContentLoaded", () => {
           notifyBackgroundScriptForRules();
           clearForm();
           renderPopup(
-            `Imported JSON collection. ${newCount} new rules. ${updatedCount} modified.`,
+            `Imported rules: ${newCount} new, ${updatedCount} modified`,
           );
         } catch (error) {
-          console.error("Error parsing imported collection:", error);
-          renderPopup("Invalid collection format.");
+          console.error("Error parsing imported rules file:", error);
+          renderPopup("Invalid rules file");
         }
       };
 
@@ -922,7 +1176,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const importCollection = () => {
+  const importRules = () => {
+    // The popup closes as soon as the native file dialog takes the focus,
+    // so the import has to happen in the standalone tab
+    if (!isStandalone) {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("standalone.html?import=1"),
+      });
+      window.close();
+      return;
+    }
+
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
@@ -933,14 +1197,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const validateJSON = (json) => {
     if (!Array.isArray(json)) {
-      renderPopup("Invalid collection format");
+      renderPopup("Invalid rules file");
       return false;
     }
 
     for (let i = 0; i < json.length; i++) {
       const mock = json[i];
 
-      for (const field of collectionRequiredFields) {
+      for (const field of ruleRequiredFields) {
         if (!(field in mock)) {
           renderPopup(`Field ${field} is missing`);
           return false;
@@ -948,46 +1212,55 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (mock["urlPattern"] === "" || typeof mock["urlPattern"] !== "string") {
-        renderPopup("Invalid collection format: urlPattern invalid");
+        renderPopup("Invalid rules file: urlPattern invalid");
         return false;
       }
       if (
         mock["rawResponse"] === "" ||
         JSON.parse(mock["rawResponse"]) === undefined
       ) {
-        renderPopup("Invalid collection format; rawResponse invalid");
+        renderPopup("Invalid rules file: rawResponse invalid");
         return false;
       }
       if (!httpMethodNames.includes(mock["method"])) {
-        renderPopup("Invalid collection format: method invalid");
+        renderPopup("Invalid rules file: method invalid");
         return false;
       }
       if (
         typeof mock["statusCode"] !== "number" ||
-        mock["statusCode"] <= 99 ||
+        mock["statusCode"] < 200 ||
         mock["statusCode"] >= 600
       ) {
-        renderPopup("Invalid collection format: statusCode invalid");
+        renderPopup("Invalid rules file: statusCode invalid");
         return false;
       }
       if (!matchTypeNames.includes(mock["matchType"])) {
-        renderPopup("Invalid collection format");
+        renderPopup("Invalid rules file");
         return false;
       }
       if (typeof mock["id"] !== "number") {
-        renderPopup("Invalid collection format: id invalid");
+        renderPopup("Invalid rules file: id invalid");
         return false;
       }
       if (typeof mock["isActive"] !== "boolean") {
-        renderPopup("Invalid collection format: isActive invalid");
+        renderPopup("Invalid rules file: isActive invalid");
+        return false;
+      }
+      // Optional, so exports made before collections existed still import
+      if (
+        "collection" in mock &&
+        mock["collection"] !== null &&
+        typeof mock["collection"] !== "string"
+      ) {
+        renderPopup("Invalid rules file: collection invalid");
         return false;
       }
       if (typeof mock["response"] === "Object") {
-        renderPopup("Invalid collection format");
+        renderPopup("Invalid rules file");
         return false;
       }
       if (typeof mock["headers"] === "Object") {
-        renderPopup("Invalid collection format: Invalid headers");
+        renderPopup("Invalid rules file: Invalid headers");
         return false;
       }
     }
@@ -1034,9 +1307,10 @@ document.addEventListener("DOMContentLoaded", () => {
         : ruleListSearchInput;
       let value = parseInt(domInput.value);
 
-      if (value < 100 || value > 599) {
-        if (value < 100) {
-          domInput.value = 100;
+      // fetch / XHR can only expose 200-599 to the page
+      if (value < 200 || value > 599) {
+        if (value < 200) {
+          domInput.value = 200;
         } else {
           domInput.value = 599;
         }
@@ -1081,8 +1355,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // header
   tabLabelNewRule.addEventListener("click", clearForm);
-  tabLabels[0].onclick = () => showHideOptions("720px");
-  tabLabels[1].onclick = () => showHideOptions("1520px");
+  tabLabels[0].onclick = hideOptions;
+  tabLabels[1].onclick = hideOptions;
   tabLabels[2].onclick = handleStartStopLabel;
   tabLabels[3].onclick = handleOptionsLabel;
   const openTabBtn = document.getElementById("tab-label-open-tab");
@@ -1101,6 +1375,7 @@ document.addEventListener("DOMContentLoaded", () => {
   mockResponseTextarea.addEventListener("blur", parseJson);
   randomJson.addEventListener("click", notifyBackgroundScriptForJson);
   saveMockButton.addEventListener("click", saveOrEditMock);
+  urlPatternInput.addEventListener("input", updateSaveButtonState);
   statusCode.addEventListener("blur", () => validateStatusCode("New Rule"));
   statusCode.addEventListener("input", () => limitToXDigits("New Rule", 3));
   wholeMockResponse.forEach((input) => {
@@ -1121,6 +1396,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Rule list section
   ruleListSearchSelect.addEventListener("click", showHideSearchInput);
   ruleListSearchSelect.addEventListener("click", renderMocksList);
+  // also on change: picking an option with the keyboard fires no click
+  ruleListSearchSelect.addEventListener("change", showHideSearchInput);
   ruleListSearchSelect.addEventListener("change", renderMocksList);
   ruleListSearchSelect.addEventListener("change", () => {
     if (ruleListSearchInput.type === "number") limitToXDigits("Rule List", 3);
@@ -1137,6 +1414,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   ruleListSearchInput.addEventListener("input", renderMocksList);
+  ruleSearchNameInput.addEventListener("input", renderMocksList);
+  ruleSearchNameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && ruleSearchNameInput.value !== "") {
+      event.preventDefault();
+      ruleSearchNameInput.value = "";
+      renderMocksList();
+    }
+  });
+  ruleListSearchSelectCollection.addEventListener("change", renderMocksList);
+  collectionToggleButton.addEventListener("click", toggleSelectedCollection);
+  collectionExportButton.addEventListener("click", exportSelectedCollection);
+  collectionInput.addEventListener("focus", renderCollectionOptions);
+  collectionInput.addEventListener("input", renderCollectionOptions);
+  collectionInput.addEventListener("blur", closeCollectionList);
+  collectionInput.addEventListener("keydown", handleCollectionKeydown);
+  ruleSearchClearButton.addEventListener("click", () => {
+    ruleSearchNameInput.value = "";
+    renderMocksList();
+    ruleSearchNameInput.focus();
+  });
 
   // Options menu
   options[0].onmouseenter = () =>
@@ -1147,8 +1444,8 @@ document.addEventListener("DOMContentLoaded", () => {
     (optionIcons[1].src = "images/export-white.svg");
   options[1].onmouseleave = () =>
     (optionIcons[1].src = "images/export-black.svg");
-  options[0].addEventListener("click", importCollection);
-  options[1].addEventListener("click", exportCollection);
+  options[0].addEventListener("click", importRules);
+  options[1].addEventListener("click", exportRules);
 
   // Auto-save draft on form changes
   const formInputs = [
@@ -1159,6 +1456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     delay,
     mockResponseTextarea,
     aliasInput,
+    collectionInput,
   ];
   formInputs.forEach((el) => {
     el.addEventListener("input", scheduleSaveDraft);
@@ -1173,6 +1471,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   mockResponseTextarea.addEventListener("scroll", syncJsonHighlightScroll);
   updateJsonHighlight();
+
+  // Ctrl/Cmd + S saves the rule while the create tab is visible
+  document.addEventListener("keydown", (event) => {
+    const isSaveShortcut =
+      (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s";
+    if (!isSaveShortcut) return;
+    event.preventDefault();
+    if (tabLabelNewRuleInput.checked && !saveMockButton.disabled) {
+      saveOrEditMock();
+    }
+  });
+
+  // Opened from the popup's Import: the file dialog needs a click, so point to it
+  if (isStandalone && new URLSearchParams(location.search).has("import")) {
+    history.replaceState(null, "", location.pathname);
+    optionsContainer.classList.remove("hidden");
+    renderPopup("Click Import to choose your rules file");
+  }
 
   // Theme toggle
   const applyTheme = (isDark) => {

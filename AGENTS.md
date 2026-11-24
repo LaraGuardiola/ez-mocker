@@ -36,7 +36,7 @@ Vanilla JS Chrome Extension (Manifest V3) that intercepts `fetch` and `XMLHttpRe
 - **No TypeScript** — plain JS with JSDoc-style comments where helpful
 - **Variable declarations:** prefer `const`; use `let` only for reassignment; never use `var`
 - **Variable naming:** `camelCase` for all identifiers
-- **Constants:** `UPPER_SNAKE_CASE` for true compile-time-known constants (e.g., `popupTimer = 5000`, `httpMethodNames`, `matchTypeNames`, `collectionRequiredFields`)
+- **Constants:** `UPPER_SNAKE_CASE` for true compile-time-known constants (e.g., `popupTimer = 5000`, `httpMethodNames`, `matchTypeNames`, `ruleRequiredFields`)
 - **Destructuring:** encouraged for object property access
 
 ### Functions & Arrow Functions
@@ -52,7 +52,7 @@ Vanilla JS Chrome Extension (Manifest V3) that intercepts `fetch` and `XMLHttpRe
 |---|---|---|
 | Variables | `camelCase` | `activeMocks`, `urlPatternInput` |
 | Functions | `camelCase` | `loadMocks()`, `saveOrEditMock()` |
-| Constants | `UPPER_SNAKE_CASE` | `collectionRequiredFields`, `httpColorList` |
+| Constants | `UPPER_SNAKE_CASE` | `ruleRequiredFields`, `httpColorList` |
 | CSS classes | `kebab-case` | `.header-list-item`, `.mock-info`, `.tab-label` |
 | HTML IDs | `kebab-case` | `#url-pattern`, `#http-status-code`, `#save-mock` |
 | Chrome message types | `UPPER_SNAKE_CASE` strings | `"UPDATE_RULES"`, `"GET_JSON"`, `"FROM_ISOLATED_TO_MAIN"` |
@@ -89,6 +89,7 @@ Vanilla JS Chrome Extension (Manifest V3) that intercepts `fetch` and `XMLHttpRe
   rawResponse: string,   // original JSON string before parse
   statusCode: number,    // 100-599
   alias: string | null,  // display name
+  collection: string | null, // groups rules ("flows"); derived, no separate storage
   isActive: boolean,     // enabled/disabled
   headers: object        // { "Content-Type": "application/json", ... }
 }
